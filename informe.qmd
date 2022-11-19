@@ -1,0 +1,38 @@
+---
+title: "Inferencia Conformal"
+author: "Mauro Loprete y Maximiliano Saldaña"
+format: 
+  pdf:
+    documentclass: scrreprt
+date: "Diciembre 2022"
+number-sections: true
+toc: true
+bibliography: biblio.bib
+csl: apa-with-abstract.csl
+lang: es
+execute:
+  echo: false
+  include: false
+  warning: false
+crossref:
+  chapters: true
+---
+
+## Introducción
+
+
+## Inferencia conformal
+
+
+## Aplicación
+
+## Conclusión
+
+## Bibliografía
+
+::: {#refs}
+:::
+
+# Anexo {.appendix}
+
+
