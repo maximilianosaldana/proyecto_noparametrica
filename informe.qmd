@@ -18,17 +18,50 @@ crossref:
   chapters: true
 ---
 
-## Introducción
+# Introducción
 
+En @lei2017 los autores plantean un marco general para realizar inferencia predictiva sin supuestos distribucionales en un contexto de regresión, empleando la _inferencia conformal_. Mediante la metodología planteada se pueden obtener intervalos de confianza con validez en muestra finitas (no asintótica) para una variable de respuesta, empleando cualquier estimador de la función de regresión.
 
-## Inferencia conformal
+El problema se plantea de la siguiente manera: Se considera $Z_1, \dots, Z_n \sim F$ i.i.d., donde $Z_i = (X_i, Y_i)$ es una variable aleatoria en $\mathbb{R}^d \times \mathbb{R}$, $Y_i$ es la variable de respuesta y $X_i = X_i(1) \dots, X_i(d)$ son las covariables. Se tiene tiene la función de regresión:
 
+$$
+\mu(x) = E(Y | X = x), \,\,\,\, x \in \mathbb{R}^d
+$$
 
-## Aplicación
+Es de interés predecir la nueva respuesta $Y_{n+1}$ a las covariables $X_{n+1}$, sin hacer supuestos sobre $\mu$ o $F$. Dado un nivel de cobertura $\alpha$, el objetivo es construir un intervalo de predicción $C \subseteq \mathbb{R}^d \times \mathbb{R}$ basado en $Z_1, \dots, Z_n$ que cumpla:
 
-## Conclusión
+$$
+P(Y_{n+1} \in C(X_{n+1})) \ge 1-\alpha
+$$
 
-## Bibliografía
+En esta expresión se supone que $Z_{n+1} = (X_{n+1}, Y_{n+1})$ proviene también de la distribución $F$ y $C(x) = \{y \in \mathbb{R}: (x,y) \in C\}, \,\,\, x \in \mathbb{R}^d$
+
+# Inferencia conformal
+
+La idea básica de la inferencia conformal, dadas las definiciones de la introducción, consiste en que para decidir si un valor $y$ está incluido en el intervalo $C(X_{n+1})$ consideramos poner a prueba la hipótesis nula de que $Y_{n+1} = y$ y se construye un valor-p válido basado en los cuantiles empíricos de la muestra aumentada $Z_1, \dots, Z_n, Z_{n+1}$.
+
+## Un resultado previo
+
+Sean $U_1, \dots, U_n$ una muestra i.i.d de una variable aleatoria continua. Para un nivel de no cobertura $\alpha \in (0,1)$ y una observación $U_{n+1}$, nótese que:
+
+$$
+P(U_{n+1} \le \hat{q}_{1-\alpha}) \ge 1-\alpha
+$$
+
+Donde $\hat{q}_{1-\alpha}$ es el cuantil de la muestra $U_1, \dots, U_n$ definido por:
+
+$$
+\hat{q}_{1-\alpha} = \begin{cases}
+  U_{(\lceil (n+1)(1-\alpha) \rceil)} \,\,\,\, \text{si} \lceil (n+1)(1-\alpha) \rceil \le n \\
+  \infty \,\,\,\, \text{en caso contrario}
+\end{cases}
+$$
+
+# Aplicación
+
+# Conclusión
+
+# Bibliografía
 
 ::: {#refs}
 :::
