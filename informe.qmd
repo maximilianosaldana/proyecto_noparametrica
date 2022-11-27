@@ -75,7 +75,7 @@ $${#eq-Cnaive}
 
 donde $\hat{\mu}$ es un estimador de la función de regresión, $\hat{F}_n$ la distribución empírica de los residuos dentro de la muestra $|Y_i - \hat{\mu}(X_{i})|$, $i=1,\dots,n$ y ${F}^{-1}_n (1-\alpha)$ el cuantil $1-\alpha$ de $\hat{F}_n$.
 
-Este método es aproximadamente válido para muestras grandes, bajo la condición de que $\hat{\mu}$ sea lo suficientemente preciso, es decir, que ${F}^{-1}_n (1-\alpha)$ esté cerca del cuantil $1-\alpha$ de $|Y_i - \mu(X_{i})|$. Para que esto se cumpla en general es necesario el cumplimiento de condiciones de regularidad tanto para la distribución $F$ de los datos y para $\hat{mu}$, como que el modelo esté correctamente especificado.   
+Este método es aproximadamente válido para muestras grandes, bajo la condición de que $\hat{\mu}$ sea lo suficientemente preciso, es decir, que ${F}^{-1}_n (1-\alpha)$ esté cerca del cuantil $1-\alpha$ de $|Y_i - \mu(X_{i})|$. Para que esto se cumpla en general es necesario el cumplimiento de condiciones de regularidad tanto para la distribución $F$ de los datos y para $\hat{\mu}$, como que el modelo esté correctamente especificado.   
 
 Un problema de este método es que los intervalos pueden presentar una considerable sub-cobertura, dado que se están empleando los residuos dentro de la muestra. Para subsanar esto, en @lei2017 se plantea la metodología de los intervalos de predicción conformales.
 
