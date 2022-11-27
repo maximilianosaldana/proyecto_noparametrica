@@ -224,12 +224,39 @@ También se puede aplicar este método con una separación no balanceada de la m
 
 ## Intervalos conformales con múltiples separaciones de la muestra
 
+Al considerar diferentes divisiones estamos introduciendo una fuente **adicional** de aleatoriedad a nuestra estimación, por tanto, el método de dividir la muestra reduce el costo computacional pero introduce ruido provocando una mayor incertidumbre en nuestras predicciones.
+
+Una manera de corregirlo es combinar las diferentes inferencias realizadas en $N$ particiones independientes, construyendo así, $C_{split,1}$,$\cdots$,$C_{split,N}$, en donde cada intervalo es construido a un nivel de significación $\alpha^{*} = 1 - \alpha/N$ y su relación esta dada de la siguiente manera:
+
+$$
+C^{N}_{split}(x) = \cap_{j = 1}^{N} C_{split,j}(x) ~~ x \in R^{d}
+$$
+
+Como se puede apreciar, al utilizar este procedimiento hay un precio que debemos de pagar, los intervalos se vulven mas anchos a medida que $N$ crece, esto puede verse de la siguiente manera:
+
+Como sabemos, la cobertura marginal de nuestra predicción tiene una cobertura de al menos $1-\alpha$ por construcción, además con el algoritmo \ref{alg:algo2} podemos acotar aún mas esta probabilidad:
+
+$$
+1 - \alpha \leq P(Y_{n+1} \in C_{split}\left(X_{n+1}\right)) \leq 1 - \alpha + \frac{2}{n + 2} \leq 1
+$${#eq-cota-cobertura}
+
+En nuestro caso, cada partición esta construida con un nivel de significación $\alpha^{*} = \alpha/N$, por tanto remplazando esta identidad en \ref{eq-cota-cobertura}, obtenemos la siguiente expresión
+
+$$
+1 - \frac{\alpha}{N} \leq P(Y_{n+1} \in C_{split}\left(X_{n+1}\right)) \leq 1 - \frac{\alpha}{N} + \frac{2}{n + 2} \leq 1
+$$
+
+Es por esto que si aumentamos $N$ el término $\alpha^{*}$ se vuelve aún mas chico y debido a que estamos frente a una medida de probabilidad esta se acerca cada vez más a uno, por tanto, nuestros intervalos se vuelven aún mas estrechos.
+
 
 ## Intervalos predictivos mediante Jackknife
 
 # Aplicación
 
 # Conclusión
+
+
+Es importante considerar que bajo esta estructura de construcción de intervalos 
 
 # Bibliografía
 
