@@ -138,19 +138,94 @@ El procedimiento para obtener el intervalo se puede resumir en el Algoritmo \ref
     }
     Se devuelve $C_{conf}(x)$ para cada $X \in \mathcal{X}_{nuevo}$.
 
-
-
-
 \end{algorithm}
 
 
-### Teorema
+### Teorema {#sec-teorema1}
 
-El intervalo @eq-Cconf tiene cobertura válida para muestras finitas por construcción y a su vez no presenta sobrecobertura.
+El intervalo @eq-Cconf tiene cobertura válida para muestras finitas por construcción y a su vez no presenta sobrecobertura. Esto se puede expresar mediante las expresiones @eq-cobCconf y @eq-cobCconf2, respectivamente:
 
+Sea $(X_i, Y_i)$, $i=1,\dots,n$ v.a. i.i.d, entonces para la nueva observación i.i.d. $(X_{n+1}, Y_{n+1})$:
+
+$$
+P(Y_{n+1}\in C_{conf}(X_{n+1})) \ge 1-\alpha
+$${#eq-cobCconf}
+
+Adicionalmente, si se hace el supuesto que para todo $y \in \mathbb{R}$ los residuos dentro de la muestra $R_{y,i} = |Y_i - \hat{\mu}_y(X_i)|$, $i=1,\dots,n$ tienen una distribución conjunta continua se cumple que:
+
+$$
+P(Y_{n+1}\in C_{conf}(X_{n+1})) \le 1-\alpha + \frac{1}{n+1}
+$${#eq-cobCconf2}
+
+
+::: {.remark}
+Nótese que las probabilidades aquí, al tomarse sobre la muestra aumentada i.i.d. implican cobertura promedio (o marginal). Esto no es lo mismo que la cobertura condicional $P(Y_{n+1} \in C_{conf}(x)| X_{n+1}=x) \ge 1-\alpha \,\,\, \forall \,\,\, x \in \mathbb{R}^d$. Esta última es una propiedad más fuerte y no puede lograrse con intervalos predictivos de amplitud finita sin que el modelo y el estimador cumplan condiciones de regularidad y consistencia.
+:::
+
+
+::: {.remark}
+Si se mejora el estimador $\hat{\mu}$, en general el intervalo de predicción conformal decrece en tamaño. Esto se da debido a que un $\hat{\mu}$ más preciso lleva a residuos más pequeños y los intervalos conformales están definidos por los cuantiles de la distribución aumentada de los residuos.
+:::
 
 ## Intervalos de predicción conformales con muestras separadas
 
+Un problema práctico de los intervalos de inferencia conformal de la sección anterior es que tienen mucho costo computacional. Para poder concluir si $y \in C_{conf}(X_{n+1})$, para cualquier $X_{n+1}$ y $y$, se tiene que reestimar el modelo en la muestra aumentada que incluye el nuevo punto $X_{n+1}$ y recalcular y reordenar los nuevos residuos obtenidos.
+
+Para enfrentar esta problemática se puede hacer uso de una metodología denominada por @lei2017 como predicción conformal separada (_split conformal prediction_). Su costo computacional es menor (es el del paso de estimación únicamente) y tiene menos requerimientos de memoria (solo hay que guardar las variables seleccionadas cuando se evalúa el ajuste en los nuevos puntos $X_i$, $i \in \mathcal{I}_2$). Se presenta en el Algoritmo \ref{alg:algo2}.  
+
+\begin{algorithm}[!ht]
+\caption{Intervalos de predicción conformales con muestras separadas \label{alg:algo2}}
+
+\DontPrintSemicolon
+  
+  \KwInput{Datos $(X_i, Y_i)$, $i =1, \dots, n$, nivel de no cobertura $\alpha \in (0,1)$, algoritmo de regresión $\mathcal{A}$.}
+
+  \KwOutput{Intervalos de predicción, sobre $x \in \mathbb{R}^d$}
+  
+    Se separa la muestra al azar en dos subconjuntos de igual tamaño $\mathcal{I}_1$ e $\mathcal{I}_2$. \;
+
+    $\hat{\mu}_y = \mathcal{A}(\{(X_i, Y_i): i \in \mathcal{I}_1 \})$\;
+
+    $R_{i} = |Y_i-\hat{\mu}_y(X_i)|$, $i \in \mathcal{I}_2$\;
+
+    $d=$ el k-ésimo valor más pequeño en $\{R_i: i \in \mathcal{I}_2\}$, donde $k=\lceil (n/2 +1)(1-\alpha) \rceil$ \;
+    
+    Se devuelve $C_{split}(x)=[\hat{\mu}-d, \hat{\mu}+d]$ para todo $x \in \mathbb{R}^d$.
+
+\end{algorithm}
+
+### Teorema 
+
+Sea $(X_i, Y_i)$, $i=1,\dots,n$ v.a. i.i.d, entonces para la nueva observación i.i.d. $(X_{n+1}, Y_{n+1})$:
+
+$$
+P(Y_{n+1}\in C_{splt}(X_{n+1})) \ge 1-\alpha
+$${#eq-cobCsplit}
+
+Adicionalmente, si se hace el supuesto que los residuos $R_{i}$, $i \in \mathcal{I}_2$ tienen una distribución conjunta continua se cumple que:
+
+$$
+P(Y_{n+1}\in C_{split}(X_{n+1})) \le 1-\alpha + \frac{2}{n+2}
+$${#eq-cobCsplit2}
+
+### Teorema
+
+Los intervalos de predicción conformales con muestras separadas dan una garantía aproximada de cobertura dentro de la muestra. Esto se puede expresar como que existe una constante $c>0$ tal que, para cualquier $\epsilon>0$:
+
+$$
+P\left( \frac{2}{n} \sum_{i \in \mathcal{I}_2} \mathbb{I} \{Y_I \in C_{split}(X_i) - (1-\alpha) \ge \epsilon\} \right) \le 2 \exp{(-cn^2(\epsilon-4/n)^2)}
+$${#eq-cobCsplitInSample}
+
+Esto implica cobertura dentro de la muestra para la muestra $\mathcal{I}_2$, revirtiendo los roles de $\mathcal{I}_1$ e $\mathcal{I}_2$ se puede extender para toda la muestra.
+
+::: {.remark}
+También se puede aplicar este método con una separación no balanceada de la muestra, con $|\mathcal{I}_1|= \rho n$ e $|\mathcal{I}_1|= \rho n$, para $\rho \in (0,1)$. Esto puede ser útil en situaciones donde el procedimiento de regresión es complejo y puede resultar beneficioso elegir $\rho > 0,5$, para que $\hat{\mu}$ sea más preciso.
+::: 
+
+## Intervalos conformales con múltiples separaciones de la muestra
+
+
+## Intervalos predictivos mediante Jackknife
 
 # Aplicación
 
