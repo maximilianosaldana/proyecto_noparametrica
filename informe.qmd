@@ -16,9 +16,15 @@ execute:
   warning: false
 crossref:
   chapters: true
+header-includes:
+  - \usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+  - \usepackage{xcolor}
+  - \SetKwInput{KwInput}{Entrada}                
+  - \SetKwInput{KwOutput}{Salida}
+  - \SetAlgorithmName{Algoritmo}
 ---
 
-# Introducción
+# Introducción {#sec-intro}
 
 En @lei2017 los autores plantean un marco general para realizar inferencia predictiva sin supuestos distribucionales en un contexto de regresión, empleando la _inferencia conformal_. Mediante la metodología planteada se pueden obtener intervalos de confianza con validez en muestra finitas (no asintótica) para una variable de respuesta, empleando cualquier estimador de la función de regresión.
 
@@ -36,26 +42,115 @@ $$
 
 En esta expresión se supone que $Z_{n+1} = (X_{n+1}, Y_{n+1})$ proviene también de la distribución $F$ y $C(x) = \{y \in \mathbb{R}: (x,y) \in C\}, \,\,\, x \in \mathbb{R}^d$
 
-# Inferencia conformal
+# Inferencia conformal {#sec-InfConf}
 
 La idea básica de la inferencia conformal, dadas las definiciones de la introducción, consiste en que para decidir si un valor $y$ está incluido en el intervalo $C(X_{n+1})$ consideramos poner a prueba la hipótesis nula de que $Y_{n+1} = y$ y se construye un valor-p válido basado en los cuantiles empíricos de la muestra aumentada $Z_1, \dots, Z_n, Z_{n+1}$.
 
-## Un resultado previo
+## Un resultado previo {#sec-resprevio}
 
 Sean $U_1, \dots, U_n$ una muestra i.i.d de una variable aleatoria continua. Para un nivel de no cobertura $\alpha \in (0,1)$ y una observación $U_{n+1}$, nótese que:
 
 $$
 P(U_{n+1} \le \hat{q}_{1-\alpha}) \ge 1-\alpha
-$$
+$${#eq-Uresprevio}
 
 Donde $\hat{q}_{1-\alpha}$ es el cuantil de la muestra $U_1, \dots, U_n$ definido por:
 
 $$
 \hat{q}_{1-\alpha} = \begin{cases}
-  U_{(\lceil (n+1)(1-\alpha) \rceil)} \,\,\,\, \text{si} \lceil (n+1)(1-\alpha) \rceil \le n \\
+  U_{(\lceil (n+1)(1-\alpha) \rceil)} \,\,\,\, \text{si} \,\,\,\, \lceil (n+1)(1-\alpha) \rceil \le n \\
   \infty \,\,\,\, \text{en caso contrario}
 \end{cases}
+$${#eq-Ucases}
+
+Aquí $U_{(1)} \le \dots \le U_{(n)}$ son los estadísticos de orden de la muestra. Se verifica la cobertura en muestra finita de la @eq-Uresprevio: dada la independencia de las variables, el rango de $U_{n+1}$ en la muestra se distribuye uniforme en el conjunto $\{1, \dots, n+1\}$, entonces 
+
+## Método _naive_ de construcción de intervalos {#sec-naive}
+
+Usando el resultado previo de la sección anterior y en el contexto de regresión planteado en la Sección @sec-intro, un método sencillo para contruir un intervalo predictivo para $Y_{n+1}$ ante el valor $X_{n+1}$ es:
+
 $$
+C_{naive}(X_{n+1}) = \left[ \hat{\mu}(X_{n+1}) - \hat{F}^{-1}_n (1-\alpha), \hat{\mu}(X_{n+1}) + \hat{F}^{-1}_n (1-\alpha) \right]
+$${#eq-Cnaive}
+
+donde $\hat{\mu}$ es un estimador de la función de regresión, $\hat{F}_n$ la distribución empírica de los residuos dentro de la muestra $|Y_i - \hat{\mu}(X_{i})|$, $i=1,\dots,n$ y ${F}^{-1}_n (1-\alpha)$ el cuantil $1-\alpha$ de $\hat{F}_n$.
+
+Este método es aproximadamente válido para muestras grandes, bajo la condición de que $\hat{\mu}$ sea lo suficientemente preciso, es decir, que ${F}^{-1}_n (1-\alpha)$ esté cerca del cuantil $1-\alpha$ de $|Y_i - \mu(X_{i})|$. Para que esto se cumpla en general es necesario el cumplimiento de condiciones de regularidad tanto para la distribución $F$ de los datos y para $\hat{mu}$, como que el modelo esté correctamente especificado.   
+
+Un problema de este método es que los intervalos pueden presentar una considerable sub-cobertura, dado que se están empleando los residuos dentro de la muestra. Para subsanar esto, en @lei2017 se plantea la metodología de los intervalos de predicción conformales.
+
+## Intervalos de predicción conformales
+
+Para cada valor $y \in \mathbb{R}$ se construye un estimador de regresión aumentado $\hat{\mu}_y$, el cual se estima en el conjunto de datos aumentado $Z_1,\dots\,Z_n, (X_{n+1}, y)$. Luego, se define:
+
+$$R_{y,i} = |Y_i - \hat{\mu}_y(X_i)|, \,\,\, i = 1,\dots,n$${#eq-residuoconf1}
+
+$$R_{y,n+1} = |y - \hat{\mu}_y(X_{n+1})|$${#eq-residuoconf2}
+
+Con el rango de $R_{y,n+1}$ entre los demás residuos de la muestra $R_{y,1}, \dots, R_{y,n}$ se calcula:
+
+$$
+\pi(y) = \frac{1}{n+1}\sum_{i=1}^{n+1}\mathbb{I}\{R_{y,i} \le R_{y,n+1}\} = \frac{1}{n+1} + \frac{1}{n+1}\sum_{i=1}^{n}\mathbb{I}\{R_{y,i} \le R_{y,n+1}\}
+$${#eq-piy}
+
+que es la proporción de los puntos de la muestra aumentada cuyos residuos dentro de la muestra son más pequeños que el residuo $R_{y,n+1}$. Como los datos son i.i.d. y suponiendo la simetría de $\hat{\mu}$, se puede apreciar que el estadístico $\pi(Y_{n+1})$ se distribuye uniforme en ${1/(n+1), 2/(n+1),\dots,1}$, lo cual implica^[Ver por qué]:
+
+$$
+P((n+1)\pi(Y_{n+1})\le \lceil (1-\alpha)(n+1)\rceil) \ge 1-\alpha
+$${#eq-probconf}
+
+Esta expresión se puede interpretar como que $1-\pi(Y_{n+1})$ da un valor-p válido conservador para la prueba de hipótesis donde $H_0) Y_{n+1} =y$.
+
+Aplicando dicha prueba sobre todos los posibles valores de $y \in \mathbb{R}$, la ecuación @eq-probconf lleva al intervalo de predicción conformal evaluado en $X_{n+1}$:
+
+$$
+C_{conf}(X_{n+1}) = \left[y \in \mathbb{R}: (n+1)\pi(Y_{n+1})\le \lceil (1-\alpha)(n+1) \rceil \right]
+$${#eq-Cconf}
+
+Cada vez que se quiere obtener un intervalo de predicción en un nuevo conjunto de covariables se tienen que recalcular los pasos @eq-residuoconf1, @eq-residuoconf2, @eq-piy y @eq-Cconf. En la práctica, se restringen los valores de $y$ a una grilla discreta.
+
+El procedimiento para obtener el intervalo se puede resumir en el Algoritmo \ref{alg:algo1}.
+
+
+
+\begin{algorithm}[!ht]
+\caption{Intervalo de predicción conformal \label{alg:algo1}}
+
+\DontPrintSemicolon
+  
+  \KwInput{Datos $(X_i, Y_i)$, $i =1, \dots, n$, nivel de no cobertura $\alpha \in (0,1)$, algoritmo de regresión $\mathcal{A}$, puntos $\mathcal{X}_{nuevo}$ en los que construir intervalos de predicción y valores $\mathcal{Y}_{prueba} = \{y_1,y_2,\dots\}$ para comparar con la predicción.}
+
+
+  \KwOutput{Intervalos de predicción, en cada elemento de $\mathcal{X}_{nuevo}$}
+  
+  \For{$x \in \mathcal{X}_{nuevo}$}
+    {
+      \For{$y \in \mathcal{Y}_{prueba}$}
+        {
+          $\hat{\mu}_y = \mathcal{A}(\{(X_1, Y_1), \dots, (X_n,Y_n), (x,y)\})$\;
+
+          $R_{y_i} = |Y_i-\hat{\mu}_y(X_i)|, \,\, i=1,\dots,n$ y $R_{y,n+1}=|y-\hat{\mu}_y(x)|$\;
+
+          $\pi(y) = (1+\sum_{i=1}^n \mathbb{I}\{R_{y,i} \le R_{y, n+1} \})/(n+1)$\;
+        } 
+
+        $C_{conf}(x) = \left[y \in \mathbb{R}: (n+1)\pi(Y_{n+1})\le \lceil (1-\alpha)(n+1) \rceil  \right]$\;
+    }
+    Se devuelve $C_{conf}(x)$ para cada $X \in \mathcal{X}_{nuevo}$.
+
+
+
+
+\end{algorithm}
+
+
+### Teorema
+
+El intervalo @eq-Cconf tiene cobertura válida para muestras finitas por construcción y a su vez no presenta sobrecobertura.
+
+
+## Intervalos de predicción conformales con muestras separadas
+
 
 # Aplicación
 
