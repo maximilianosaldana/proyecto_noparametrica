@@ -112,7 +112,6 @@ Cada vez que se quiere obtener un intervalo de predicción en un nuevo conjunto 
 El procedimiento para obtener el intervalo se puede resumir en el Algoritmo \ref{alg:algo1}.
 
 
-
 \begin{algorithm}[!ht]
 \caption{Intervalo de predicción conformal \label{alg:algo1}}
 
@@ -224,10 +223,67 @@ También se puede aplicar este método con una separación no balanceada de la m
 
 ## Intervalos conformales con múltiples separaciones de la muestra
 
+Si bien separar la muestra reduce el tiempo que se tarda en calcular los intervalos, introduce otro elemento aleatorio en el método que incrementa la variabildiad; que es cuáles observaciones quedan en uno u otro de los subconjuntos. Una manera de enfrentarse a esto es combinar las inferencias realizadas con distintas separaciones de la muestra. 
+
+Sea $N$ la cantidad de veces que separamos la muestra, se calculan con estos distintos subconjuntos los intervalos de predicción conformales $C_{split,1},\dots,C_{split,N}$, donde cada intervalo se construye al nivel de confianza $1-\alpha/N$. Se define:
+
+$$
+C_{split}^{(N)}(x) = \bigcap_{j=1}^N C_{split,j}(x), \,\,\, \text{sobre} \,\,\, x \in \mathbb{R}^d
+$$ {#eq-CMultSplit}
+
+Usando un argumento del tipo Bonferroni^[Ver esto], se concluye que la banda de predicción $C_{split}^{(N)}$ tiene una cobertura marginal de por lo menos $1-\alpha$.
+
+Esta metodología reduce la variabilidad originada por la separación, pero se puede dar que el tamaño del intervalo $C_{split}^{(N)}$ es creciente en $N$ y es más amplio que $C_{split}$, debido al nivel de confianza con que se construye cada intervalo. 
 
 ## Intervalos predictivos mediante Jackknife
 
+Esta metodología emplea los cuantiles de los residuos de validación cruzada dejando una observación fuera (_leave-one-out_) para calcular los intervalos de predicción. 
+
+
+\begin{algorithm}[!ht]
+\caption{Intervalo de predicción conformal mediante Jackknife. \label{alg:algo3}}
+
+\DontPrintSemicolon
+  
+  \KwInput{Datos $(X_i, Y_i)$, $i =1, \dots, n$, nivel de no cobertura $\alpha \in (0,1)$, algoritmo de regresión $\mathcal{A}$.}
+
+
+  \KwOutput{Intervalos de predicción sobre $x \in \mathbb{R}^d$.}
+  
+  \For{$i \in \{1, \dots, n \}$}
+    {
+      $\hat{\mu}^{(-i)} = \mathcal{A}(\{(X_l, Y_l): l \ne i\})$\;
+
+      $R_{i} = |Y_i - \hat{\mu}^{(-i)}(X_i)|$\;
+    }
+    
+    $d =$ el k-ésimo valor más pequeño en $\{R_i: i \in \{1, \dots, n\} \}$, con $k = \lceil n(1-\alpha)\rceil$\;
+    
+    Se devuelve $C_{jack}(x) = [\hat{\mu}(x)-d,\hat{\mu}(x)+d]$ para todo $x \in \mathbb{R}^d$\;
+
+\end{algorithm}
+
+
+
+
+
+
+
+
+Tiene la ventaja que emplea más de la muestra que se aparta para entrenar cuando se calculan los residuos, lo cual frecuentemente lleva a intervalos de menor amplitud. Como desventaja, los intervalos que se obtienen no garantizan cobertura válida fuera de la muestra cuando se trabaja con muestras finitas e incluso asintóticamente la cobertura depende de condiciones del estimador.
+
+
+
+
+
 # Aplicación
+
+```{r}
+library(datasets)
+
+cars
+```
+
 
 # Conclusión
 
