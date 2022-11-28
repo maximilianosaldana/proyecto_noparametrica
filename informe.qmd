@@ -4,16 +4,19 @@ author: "Mauro Loprete y Maximiliano Saldaña"
 format: 
   pdf:
     documentclass: scrreprt
-date: "Diciembre 2022"
+date: "Diciembre de 2022"
 number-sections: true
 toc: true
 bibliography: biblio.bib
 csl: apa-with-abstract.csl
 lang: es
 execute:
-  echo: false
+  echo: true
   include: false
   warning: false
+knitr:
+  opts_knit:
+    verbose: true
 crossref:
   chapters: true
 header-includes:
@@ -219,7 +222,7 @@ $${#eq-cobCsplitInSample}
 Esto implica cobertura dentro de la muestra para la muestra $\mathcal{I}_2$, revirtiendo los roles de $\mathcal{I}_1$ e $\mathcal{I}_2$ se puede extender para toda la muestra.
 
 ::: {.remark}
-También se puede aplicar este método con una separación no balanceada de la muestra, con $|\mathcal{I}_1|= \rho n$ e $|\mathcal{I}_1|= \rho n$, para $\rho \in (0,1)$. Esto puede ser útil en situaciones donde el procedimiento de regresión es complejo y puede resultar beneficioso elegir $\rho > 0,5$, para que $\hat{\mu}$ sea más preciso.
+También se puede aplicar este método con una separación no balanceada de la muestra, con $|\mathcal{I}_1|= \rho n$ e $|\mathcal{I}_2|= (1-\rho)n$, para $\rho \in (0,1)$. Esto puede ser útil en situaciones donde el procedimiento de regresión es complejo y puede resultar beneficioso elegir $\rho > 0,5$, para que $\hat{\mu}$ sea más preciso.
 ::: 
 
 ## Intervalos conformales con múltiples separaciones de la muestra
@@ -251,7 +254,88 @@ Es por esto que si aumentamos $N$ el término $\alpha^{*}$ se vuelve aún mas ch
 
 ## Intervalos predictivos mediante Jackknife
 
+Una vez más, bajo la restricción \textit{costo computacional-precisión} podemos encontrar un método intermedio entre aplicar la versión mas pura de la inferencia conformal y la versión donde introducimos divisiones en la muestra, es el conocido método de \textit{Jackkinfe}.
+
+
+
 # Aplicación
+
+```{r,echo = TRUE}
+
+set.seed(12345)
+n <- 1000
+U <- rnorm(n)
+
+X <- rnorm(n)
+Y <- X + U
+regData <- data.frame(X,Y)
+fitlm <- lm(Y~X, data=regData)
+eVec <- abs(fitlm$residuals)
+hist(eVec)
+
+plot(X,Y)
+Xnew <- -1.5
+abline(fitlm)
+abline(v=Xnew, lty="dashed")
+muHat <- predict(fitlm, newdata=data.frame(X=Xnew))
+points(Xnew, muHat, pch=19, col="red")
+C.X <- c(muHat-quantile(eVec, .975), muHat+quantile(eVec, .975))
+points(rep(Xnew, 2), C.X, type="l", col="red", lwd=2)
+
+nEval <- 200
+yCand <- seq(from=min(Y), to=max(Y), length=nEval)
+
+confPredict <- function(y, Xin){
+  nData <- nrow(regData)  
+  regData.a <- rbind(regData,c(Xin, y))
+  fitlm.a <- lm(Y~X, data=regData.a)
+  resOut <- abs(fitlm.a$residuals)
+  resOut_new <- resOut[length(resOut)]
+  pi.y <- mean(apply(as.matrix(resOut),
+        1,
+        function(x){x<=resOut_new}))
+  testResult <- pi.y*(nData+1) <= ceiling(.975*(nData+1))
+  return(testResult)
+}
+
+Cxa <- range(yCand[sapply(yCand, confPredict, Xin=Xnew)])
+
+plot(X,Y)
+abline(fitlm)
+abline(v=Xnew, lty="dashed")
+points(rep((Xnew+.05), 2), C.X, type="l", col="red", lwd=2)
+points(rep(Xnew, 2), Cxa, type="l", col="blue", lwd=3)
+
+```
+
+Hola
+## Split
+
+```{r}
+splitConfPredict <- function(Xin){
+  nData <- nrow(regData)
+  regData$index <- 1:nData
+  regData$split <- 1
+  regData$split[sample(regData$index, floor(nrow(regData)/2), replace=F)] <- 2
+  fitlm.spl <- lm(Y~X, data=subset(regData, split==1))
+  resOut <- abs(subset(regData, split==2)$Y - predict(fitlm.spl,
+                                         newdata=subset(regData, split==2)))
+  kOut <- ceiling(((nData/2)+1)*(.975))
+  resUse <- resOut[order(resOut)][kOut]
+  Y.hat <- predict(fitlm.spl, newdata=data.frame(X=Xin))
+  C.split <- c(Y.hat-resUse,Y.hat+resUse)
+  return(C.split)
+}
+
+plot(X,Y)
+abline(fitlm)
+abline(v=Xnew, lty="dashed")
+points(rep((Xnew+.05), 2), C.X, type="l", col="red", lwd=2)
+points(rep(Xnew, 2), Cxa, type="l", col="blue", lwd=3)
+points(rep(Xnew-.05, 2), splitConfPredict(Xnew), type="l", col="green", lwd=3)
+```
+
+
 
 # Conclusión
 
