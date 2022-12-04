@@ -289,50 +289,126 @@ Esta metodología emplea los cuantiles de los residuos de validación cruzada de
 Tiene la ventaja que emplea más de la muestra que se aparta para entrenar cuando se calculan los residuos, lo cual frecuentemente lleva a intervalos de menor amplitud. Como desventaja, los intervalos que se obtienen no garantizan cobertura válida fuera de la muestra cuando se trabaja con muestras finitas e incluso asintóticamente la cobertura depende de condiciones del estimador.
 
 
-
-
-
 # Aplicación
 
-```{r,echo = TRUE}
+En primera instancia, simulamos un conjunto de datos para realizar la estimación. En este caso es una mixtura de normales de media 0 y varianza 1.
 
+```{r}
+
+# Generamos un conjunto de datos al cual ajustar la regresion
 set.seed(12345)
 n <- 1000
-U <- rnorm(n)
 
+U <- rnorm(n)
 X <- rnorm(n)
+
 Y <- X + U
 regData <- data.frame(X,Y)
+```
+
+
+```{r}
+# Estimacion paramétrica
+fitlm <- lm(Y~X, data=regData)
+eVec_lm <- abs(fitlm$residuals)
+hist(eVec_lm)
+```
+
+```{r}
+# Estimacion no parametrica, Naradaya-Watson
+fitnw <- ksmooth(
+  X, 
+  Y, 
+  kernel = "normal",
+  # Seleccionar este parametro mejor
+  bandwidth = 0.2
+  )
+
+eVec_nw <- abs(fitnw$y-Y)
+
+hist(eVec_nw)
+
+```
+
+
+```{r}
+# Estimacion paramétrica
 fitlm <- lm(Y~X, data=regData)
 eVec <- abs(fitlm$residuals)
 hist(eVec)
+```
 
+```{r}
+# 
+```
+
+## Método simple
+
+```{r}
 plot(X,Y)
 Xnew <- -1.5
 abline(fitlm)
 abline(v=Xnew, lty="dashed")
-muHat <- predict(fitlm, newdata=data.frame(X=Xnew))
-points(Xnew, muHat, pch=19, col="red")
-C.X <- c(muHat-quantile(eVec, .975), muHat+quantile(eVec, .975))
-points(rep(Xnew, 2), C.X, type="l", col="red", lwd=2)
+
+
+muHat <- predict(
+  fitlm, 
+  newdata=data.frame(X=Xnew)
+  )
+
+points(
+  Xnew, 
+  muHat, 
+  pch=19, 
+  col="red"
+  )
+
+
+C.X <- c(
+  muHat - quantile(eVec, .975), 
+  muHat + quantile(eVec, .975)
+  )
+
+points(
+  rep(Xnew, 2), 
+  C.X, 
+  type="l", 
+  col="red", 
+  lwd=2
+  )
 
 nEval <- 200
-yCand <- seq(from=min(Y), to=max(Y), length=nEval)
+yCand <- seq(
+  from=min(Y), 
+  to=max(Y), 
+  length=nEval
+  )
 
 confPredict <- function(y, Xin){
+  
   nData <- nrow(regData)  
   regData.a <- rbind(regData,c(Xin, y))
+  
   fitlm.a <- lm(Y~X, data=regData.a)
+  
   resOut <- abs(fitlm.a$residuals)
   resOut_new <- resOut[length(resOut)]
-  pi.y <- mean(apply(as.matrix(resOut),
-        1,
-        function(x){x<=resOut_new}))
+  
+  pi.y <- mean(
+    apply(as.matrix(resOut),
+    1,
+    function(x){x<=resOut_new}
+    )
+  )
+  
   testResult <- pi.y*(nData+1) <= ceiling(.975*(nData+1))
+
   return(testResult)
 }
 
-Cxa <- range(yCand[sapply(yCand, confPredict, Xin=Xnew)])
+Cxa <- range(
+  yCand[sapply(yCand, confPredict, Xin=Xnew)]
+  )
 
 plot(X,Y)
 abline(fitlm)
@@ -342,7 +418,9 @@ points(rep(Xnew, 2), Cxa, type="l", col="blue", lwd=3)
 
 ```
 
-Hola
+
+
+
 ## Split
 
 ```{r}
