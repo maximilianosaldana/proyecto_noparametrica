@@ -4,7 +4,8 @@ author: "Mauro Loprete y Maximiliano Saldaña"
 format: 
   pdf:
     documentclass: scrreprt
-date: "Diciembre de 2022"
+date: "12/1/2022"
+date-format: "MMMM YYYY"
 number-sections: true
 toc: true
 bibliography: biblio.bib
@@ -484,7 +485,7 @@ Antes de ir a un ejemplo práctico, veamos que argumentos recibe la función `co
 
 ```{r,echo = FALSE}
 if(!require("conformalInference")){
-  devtools:.install_github(repo="ryantibs/conformal", subdir="conformalInference")
+  devtools::install_github(repo="ryantibs/conformal", subdir="conformalInference")
   library(conformalInference)
 }
 ```
