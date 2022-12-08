@@ -12,7 +12,7 @@ csl: apa-with-abstract.csl
 lang: es
 execute:
   echo: true
-  include: false
+  include: true
   warning: false
 knitr:
   opts_knit:
@@ -293,7 +293,30 @@ Tiene la ventaja que emplea más de la muestra que se aparta para entrenar cuand
 
 En primera instancia, simulamos un conjunto de datos para realizar la estimación. En este caso es una mixtura de normales de media 0 y varianza 1.
 
+```{r,echo = FALSE}
+
+
+hook_output <- knitr::knit_hooks$get("output")
+
+# set a new output hook to truncate text output
+knitr::knit_hooks$set(output = function(x, options) {
+  if (!is.null(n <- options$out.lines)) {
+    x <- xfun::split_lines(x)
+    if (length(x) > n) {
+      # truncate the output
+      x <- c(head(x, n), "....\n")
+    }
+    x <- paste(x, collapse = "\n")
+  }
+  hook_output(x, options)
+})
+
+```
+
+
 ```{r}
+
+
 
 # Generamos un conjunto de datos al cual ajustar la regresion
 set.seed(12345)
@@ -322,7 +345,7 @@ fitnw <- ksmooth(
   kernel = "normal",
   # Seleccionar este parametro mejor
   bandwidth = 0.2
-  )
+)
 
 eVec_nw <- abs(fitnw$y-Y)
 
@@ -338,9 +361,6 @@ eVec <- abs(fitlm$residuals)
 hist(eVec)
 ```
 
-```{r}
-# 
-```
 
 ## Método simple
 
@@ -354,20 +374,20 @@ abline(v=Xnew, lty="dashed")
 muHat <- predict(
   fitlm, 
   newdata=data.frame(X=Xnew)
-  )
+)
 
 points(
   Xnew, 
   muHat, 
   pch=19, 
   col="red"
-  )
+)
 
 
 C.X <- c(
   muHat - quantile(eVec, .975), 
   muHat + quantile(eVec, .975)
-  )
+)
 
 points(
   rep(Xnew, 2), 
@@ -375,7 +395,7 @@ points(
   type="l", 
   col="red", 
   lwd=2
-  )
+)
 
 nEval <- 200
 yCand <- seq(
@@ -395,9 +415,10 @@ confPredict <- function(y, Xin){
   resOut_new <- resOut[length(resOut)]
   
   pi.y <- mean(
-    apply(as.matrix(resOut),
-    1,
-    function(x){x<=resOut_new}
+    apply(
+      as.matrix(resOut),
+      1,
+      function(x){x<=resOut_new}
     )
   )
   
@@ -408,7 +429,7 @@ confPredict <- function(y, Xin){
 
 Cxa <- range(
   yCand[sapply(yCand, confPredict, Xin=Xnew)]
-  )
+)
 
 plot(X,Y)
 abline(fitlm)
@@ -448,13 +469,325 @@ points(rep(Xnew-.05, 2), splitConfPredict(Xnew), type="l", col="green", lwd=3)
 ```
 
 
+\newpage
+
+## Paquete conformalInference
+
+
+Existe un paquete disponible en CRAN, que ya tiene implementado todas estas herramientas.
+
+En concreto, tenemos la función `conformal.pred` que nos permite realizar predicciones conformales para cualquier modelo de regresión, además de su versión menos costosa en términos computacionales `conformal.split`.
+
+
+Antes de ir a un ejemplo práctico, veamos que argumentos recibe la función `conformal.pred`:
+
+
+```{r,echo = FALSE}
+if(!require("conformalInference")){
+  devtools:.install_github(repo="ryantibs/conformal", subdir="conformalInference")
+  library(conformalInference)
+}
+```
+
+
+```{r}
+
+names(formals(conformal.pred))
+
+```
+
+
+Los argumentos de la función son los siguientes:
+
+- x -> Vector de variables independientes (nxp)
+- y -> Vector de variables dependientes n
+- xo -> Matriz de variables independientes para predcir un nuevo y (n0xp)
+- train.fun -> Función para mejorar la performance del modelo, varía en cada una de sus especificaciones.
+- predcit.fun -> Función que se utilizará para predcir el nuevo valor de y
+- alpha -> Valor de cobertura
+- ...
+
+La documentación entera se encuentra en el siguiente link: \url{https://github.com/ryantibs/conformal/blob/master/conformalInference.pdf}
+
+
+Para cada argumento *.fun se tienen implementado los siguientes modelos por defecto:
+
+- **Modelo de regresión lineal** (Implementación propia de MCO usando descompocisión de Cholesky) `lm.funs()`
+- **Random Forest** (via randomForets) `rf.funs()`
+- **Splines** (via splines) `smooth.splines.funs()`
+- **Elastic Net** (via glmnet) `elastic.funs()`
+
+Para el caso de `train.fun` y `predict.fun` se pueden implementar funciones propias, dependiendo del modelo su implementación puede variar.
+
+### Implementación de un modelo de regresión lineal
+
+```{r}
+train.fun = function(x,y,out=NULL) {
+  n = nrow(x); p = ncol(x)
+  v = rep(1,p)
+  
+  if (intercept) {
+    x = cbind(rep(1,n),x)
+    v = c(0,v)
+  }
+  if (!is.null(out)) {
+    chol.R = out$chol.R
+  }
+  else {
+    chol.R = vector(mode="list",length=m)
+    for (j in 1:m) {
+      chol.R[[j]] = chol(crossprod(x) + lambda[j]*diag(v))
+    }
+  }
+  beta = matrix(0,p+intercept,m)
+  for (j in 1:m) {
+    beta[,j] = chol.solve(chol.R[[j]], t(x) %*% y)
+  }
+  
+  return(list(beta=beta,chol.R=chol.R))
+}
+```
+
+
+```{r}
+predict.fun = function(out,newx) {
+  if (intercept) {
+    newx = cbind(rep(1,nrow(newx)),newx)
+  }
+  return(newx %*% out$beta)
+}
+```
+
+\newpage
+
+### Ejemplo para implementar Nadaraya–Watson
+
+```{r}
+train.fun_ks <- function(x,y,out=NULL) {
+  
+  kernel = "normal"
+  bandwidth = 0.2
+
+  out <- ksmooth(
+    X, 
+    Y,
+    kernel,
+    bandwidth = bandwidth
+  )
+
+  list(
+    x = out$x,
+    y = out$y,
+    kernel = kernel,
+    bandwidth = bandwidth
+  )
+
+}
+
+predict.fun_ks <- function(out, newx) {
+  return(
+    ksmooth(
+      x = out$x,
+      y = out$y,
+      out$kernel,
+      out$bandwidth,
+      x.points = newx 
+    )$y
+  )
+}
+```
+
+
+Si bien en el paquete tiene implementado diferentes modelos, como es el ejemplo de la regresión lineal no paramétrica de Nadaraya–Watson, su resultado final no tiene asociado el método `predict` y devuelve una lista. Haciendo las modificaciones correspondientes, es posible utilizarlo en la función `conformal.pred`.
+
+#### Ejemplo de predicción conformal para Nadaraya–Watson
+
+Hagamos una prueba, intentado predecir el valor de Y para $X = -1.5$, como en el ejemplo anterior:
+
+```{r,error = TRUE}
+
+res <- conformal.pred(
+  x = X,
+  y = Y,
+  x0 = Xnew,
+  train.fun = train.fun_ks,
+  predict.fun = predict.fun_ks,
+  num.grid.pts = 100
+)
+
+res$pred
+
+
+```
+
+
+Ahora, probemos con la versión utilizando particiones:
+
+```{r}
+resplit <- conformal.pred.split(
+  x = X,
+  y = Y,
+  x0 = Xnew,
+  train.fun = train.fun_ks,
+  predict.fun = predict.fun_ks
+)
+
+resplit$pred
+
+
+```
+
+Como sabemos, el resultado es el mismo. Elegir un método u otro impactará en la estimación de los invervalos de predicción, veamos cada uno de ellos:
+
+
+```{r}
+
+intervalo <- function(puntual,lo,uper) {
+  glue::glue(
+    "[{puntual} - {lo};{puntual} + {uper}]",
+    lo = round(puntual - lo,2),
+    uper = round(uper - puntual,2),
+    puntual = round(puntual,2)
+  )
+}
+
+
+# Invervalo con el método conformal
+
+intervalo(
+  res$pred,
+  res$lo,
+  res$up
+)
+
+
+# Intervelo con el método de split
+
+
+intervalo(
+  resplit$pred,
+  resplit$lo,
+  resplit$up
+)
+
+```
+
+
+Como podemos ver el método de split es más amplio, en concreto existe una mayor incertidumbre a la izquierda del valor predicho. Para comparar la eficiencia de los intervalos, comparemos su apertura relativa, respecto al método conformal entero:
+
+
+```{r}
+(resplit$lo-resplit$up) / (res$lo-res$up)
+
+```
+
+Podemos ver que el método de splitting es más amplio, pero solo en poco más de un 2\%.
+
+\newpage
+
+### Ejemplo regresión múltiple
+
+Tomando como ejemplo el dataset `state.x77` de R, vamos a intentar predecir la variable `life_exp` utilizando como variables explicativas `income`, `hs_grad`, `frost` y `area`.
+
+Vamos a entrenar el modelo con todas las observaciones, a excepción de una, que será la que queremos predecir, en concreto, la ciudad de Colorado.
+
+
+```{r,error = TRUE}
+
+
+# Semilla
+
+set.seed(1234)
+
+# Para arreglar los nombres
+
+normalize_names <- function(names) {
+  upper = tolower(names)
+  newNames = gsub(" ", "_", upper)
+  return(newNames)
+}
+
+df <- as.data.frame(state.x77)
+
+names(df) <- normalize_names(names(df))
+
+# Para elegir la observación a predecir
+
+test <- runif(1,1,nrow(df))
+
+# Vector de variables independientes
+
+
+Y = df[-test,c('life_exp')]
+
+
+# Matriz de diseño
+
+X = df[-test,c('income','hs_grad','frost','area')]
+
+row.names(X) <- NULL
+X = data.matrix(X, rownames.force = TRUE)
+
+
+# Matriz de diseño en los nuevos puntos
+
+x0 = data.matrix(
+  df[test,c('income','hs_grad','frost','area')],
+  rownames.force = TRUE
+)
+
+# No funciona con lm.funs, NW usamos RF!
+
+engine_rf = rf.funs(
+  ntree = 500,
+  varfrac = 0.333
+)
+
+train.fun = engine_rf$train.fun
+predict.fun = engine_rf$predict.fun
+
+res <- conformal.pred(
+  x = X,
+  y = Y,
+  x0 = x0,
+  train.fun = train.fun,
+  predict.fun = predict.fun
+)
+
+
+intervalo(
+  res$pred,
+  res$lo,
+  res$up
+)
+
+glue::glue(
+  "La expecativa de vida de la {ciudad} es {df[test,'life_exp']}",
+  ciudad = row.names(df[test,])
+)
+
+
+```
+
+
+Para la realización de este ejemplo, se intentó realizar la predicción con el modelo de regresión lineal tanto en su versión paramétrica como su versión de núcleo,el resultado esta repleto de valores NA, por lo que se optó por probar diferentes modelos de regresión no paramétrica, en concreto, Random Forest, el cual nos dio un resultado satisfactorio.
 
 # Conclusión
 
+Si bien en la práctica, los intervalos de predicción pueden llegar a ser confusos para personas no técnicas sobre estadística es importante destacar su utilidad en la toma de decisiones, cualquier metodología que aborde sobre la mejora de estos, es de gran relevancia como la metodología expuesta en este articulo.
 
-Es importante considerar que bajo esta estructura de construcción de intervalos 
+Con este articulo hemos revisado como implementar intervalos de predicción conformales para cualquier modelo de regresión, estos alogritmos requieren únicamente asumir que los datos tienen independencia entre sí, pero ninguna forma funcional sobre los regresores, matriz de diseño o distribución de probabilidad para los residuos. Esto último puede llegar a ser una gran ventaja para modelos en donde no es tan claro la construcción de intervalos de predicción que usualmente son aproximados con boostrap, como pueden ser los métodos de ensamble o en aquellos modelos donde se hacen supuestos fuertes sobre la distribución de los datos basados en resultados asintóticos.
+
+El considerar este tipo de metodologías nos permite reducir la incertidumbre respecto a un intervalo de predicción clásico como pudimos ver en el @sec-teorema1. Es importante mencionar que se cuenta con una implementación por parte de los autores en la librería **conformalInferece** de R con modelos de regresión ampliamente utilizados en la práctica, como son modelos de regresión lineal, splines, glm, random forest, etc.
+
+Cabe destacar que la inferencia comformal es aplicada frecuentemente en la actualidad a modelos de machine learning. Estas metdologías pueden complementar los métodos basados únicamente en boostrap para estimación de varianzas en para cualquier algortimo de regresión, demostrando que en base al estimador consistente, se puede obtener un intervalo de predicción cosistente en la estimación de la cobertura condicional 
+
+
+
 
 # Bibliografía
+
+# TODO AGREGAR BIBLIOGRAFIA y PAQUETES DE R
 
 ::: {#refs}
 :::
