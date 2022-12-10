@@ -67,7 +67,7 @@ $$
 \end{cases}
 $${#eq-Ucases}
 
-Aquí $U_{(1)} \le \dots \le U_{(n)}$ son los estadísticos de orden de la muestra. Se verifica la cobertura en muestra finita de la @eq-Uresprevio: dada la independencia de las variables, el rango de $U_{n+1}$ en la muestra se distribuye uniforme en el conjunto $\{1, \dots, n+1\}$, entonces 
+Aquí $U_{(1)} \le \dots \le U_{(n)}$ son los estadísticos de orden de la muestra. Se verifica la cobertura en muestra finita de la @eq-Uresprevio: dada la independencia de las variables, el rango de $U_{n+1}$ en la muestra se distribuye uniforme en el conjunto $\{1, \dots, n+1\}$, entonces en nuestro problema de regresión observamos una muestra $Z_{i} = (X_{i},Y_{i}) ~ \in \mathbb{R}^{d} \times \mathbb{R} \sim P$ 
 
 ## Método _naive_ de construcción de intervalos {#sec-naive}
 
