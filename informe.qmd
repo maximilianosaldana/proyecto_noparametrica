@@ -282,17 +282,14 @@ Esta metodología emplea los cuantiles de los residuos de validación cruzada de
 
 
 
-
-
-
-
-
 Tiene la ventaja que emplea más de la muestra que se aparta para entrenar cuando se calculan los residuos, lo cual frecuentemente lleva a intervalos de menor amplitud. Como desventaja, los intervalos que se obtienen no garantizan cobertura válida fuera de la muestra cuando se trabaja con muestras finitas e incluso asintóticamente la cobertura depende de condiciones del estimador.
 
 
 # Aplicación
 
-En primera instancia, simulamos un conjunto de datos para realizar la estimación. En este caso es una mixtura de normales de media 0 y varianza 1.
+En esta sección se presentan aplicaciones de las metoodlogías de inferencia conformal mediante el software _R_ [@r2022]. Los ejemplos de programación manual de los intervalos están basados en los presentados en @samii2019.
+
+En primera instancia, simulamos un conjunto de datos para realizar las estimaciones. En este caso es una mixtura de normales de media 0 y varianza 1.
 
 ```{r,echo = FALSE}
 
@@ -316,10 +313,6 @@ knitr::knit_hooks$set(output = function(x, options) {
 
 
 ```{r}
-
-
-
-# Generamos un conjunto de datos al cual ajustar la regresion
 set.seed(12345)
 n <- 1000
 
@@ -330,36 +323,34 @@ Y <- X + U
 regData <- data.frame(X,Y)
 ```
 
+Luego, realizamos estimaciones de la función de regresión y guardamos los residuos. En primera instancia una estimación paramétrica por mínimos cuadrados:
 
 ```{r}
-# Estimacion paramétrica
 fitlm <- lm(Y~X, data=regData)
+
 eVec_lm <- abs(fitlm$residuals)
-hist(eVec_lm)
 ```
 
+Y también una estimación no paramétrica  usando el estimador Naradaya-Watson:
 ```{r}
-# Estimacion no parametrica, Naradaya-Watson
 fitnw <- ksmooth(
   X, 
   Y, 
   kernel = "normal",
-  # Seleccionar este parametro mejor
   bandwidth = 0.2
 )
 
 eVec_nw <- abs(fitnw$y-Y)
-
-hist(eVec_nw)
-
 ```
 
+Los histogramas de los residuos en valor absoluto para ambas estimaciones se pueden observar en la @fig-hist_e. Nótese como la estimación no paramétrica es más dispersa en este caso. Dado que los métodos de inferencia conformal dependen fuertemente del estimador, los intervalos probablemente se vean afectados por esta diferencia. 
 
 ```{r}
-# Estimacion paramétrica
-fitlm <- lm(Y~X, data=regData)
-eVec <- abs(fitlm$residuals)
-hist(eVec)
+#| label: fig-hist_e
+#| fig-cap: "Histogramas de los residuos en valores absolutos"
+par(mfrow = c(1,2))
+hist(eVec_lm)
+hist(eVec_nw)
 ```
 
 
@@ -474,13 +465,9 @@ points(rep(Xnew-.05, 2), splitConfPredict(Xnew), type="l", col="green", lwd=3)
 
 ## Paquete conformalInference
 
+El paquete de _R_ _conformalInference_ [@tibshirani2019] ya tiene implementadas todas estas herramientas de inferencia conformal.
 
-Existe un paquete disponible en CRAN, que ya tiene implementado todas estas herramientas.
-
-En concreto, tenemos la función `conformal.pred` que nos permite realizar predicciones conformales para cualquier modelo de regresión, además de su versión menos costosa en términos computacionales `conformal.split`.
-
-
-Antes de ir a un ejemplo práctico, veamos que argumentos recibe la función `conformal.pred`:
+En concreto, la función `conformal.pred` permite realizar intervalos de predicción conformales para cualquier modelo de regresión, además de su versión menos costosa en términos computacionales, los intervalos con _splits_, mediante `conformal.split`.
 
 
 ```{r,echo = FALSE}
@@ -498,7 +485,7 @@ names(formals(conformal.pred))
 ```
 
 
-Los argumentos de la función son los siguientes:
+Los argumentos de la función `conformal.pred` son los siguientes:
 
 - x -> Vector de variables independientes (nxp)
 - y -> Vector de variables dependientes n
@@ -508,12 +495,12 @@ Los argumentos de la función son los siguientes:
 - alpha -> Valor de cobertura
 - ...
 
-La documentación entera se encuentra en el siguiente link: \url{https://github.com/ryantibs/conformal/blob/master/conformalInference.pdf}
+La documentación completa se encuentra en el siguiente link: \url{https://github.com/ryantibs/conformal/blob/master/conformalInference.pdf}
 
 
-Para cada argumento *.fun se tienen implementado los siguientes modelos por defecto:
+Para cada argumento *.fun están implementados los siguientes modelos por defecto:
 
-- **Modelo de regresión lineal** (Implementación propia de MCO usando descompocisión de Cholesky) `lm.funs()`
+- **Modelo de regresión lineal** (Implementación propia de MCO usando descomposición de Cholesky) `lm.funs()`
 - **Random Forest** (via randomForets) `rf.funs()`
 - **Splines** (via splines) `smooth.splines.funs()`
 - **Elastic Net** (via glmnet) `elastic.funs()`
@@ -686,7 +673,10 @@ Podemos ver que el método de splitting es más amplio, pero solo en poco más d
 
 \newpage
 
-### Ejemplo regresión múltiple
+
+<!-- OMITIRIA LA REGRESION MULTIPLE -->
+
+<!-- ### Ejemplo regresión múltiple
 
 Tomando como ejemplo el dataset `state.x77` de R, vamos a intentar predecir la variable `life_exp` utilizando como variables explicativas `income`, `hs_grad`, `frost` y `area`.
 
@@ -771,7 +761,7 @@ glue::glue(
 ```
 
 
-Para la realización de este ejemplo, se intentó realizar la predicción con el modelo de regresión lineal tanto en su versión paramétrica como su versión de núcleo,el resultado esta repleto de valores NA, por lo que se optó por probar diferentes modelos de regresión no paramétrica, en concreto, Random Forest, el cual nos dio un resultado satisfactorio.
+Para la realización de este ejemplo, se intentó realizar la predicción con el modelo de regresión lineal tanto en su versión paramétrica como su versión de núcleo,el resultado esta repleto de valores NA, por lo que se optó por probar diferentes modelos de regresión no paramétrica, en concreto, Random Forest, el cual nos dio un resultado satisfactorio. -->
 
 # Conclusión
 
@@ -787,8 +777,6 @@ Cabe destacar que la inferencia comformal es aplicada frecuentemente en la actua
 
 
 # Bibliografía
-
-# TODO AGREGAR BIBLIOGRAFIA y PAQUETES DE R
 
 ::: {#refs}
 :::
