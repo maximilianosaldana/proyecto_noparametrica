@@ -323,6 +323,16 @@ Y <- X + U
 regData <- data.frame(X,Y)
 ```
 
+Por construcción, los datos tienen una relación lineal, lo cual se puede ver visualmente en la @fig-datos_demo
+
+```{r}
+#| label: fig-datos_demo
+#| fig-cap: "Gráfico de dispersión de los datos de ejemplo."
+
+plot(X, Y)
+```
+
+
 Luego, realizamos estimaciones de la función de regresión y guardamos los residuos. En primera instancia una estimación paramétrica por mínimos cuadrados:
 
 ```{r}
@@ -354,46 +364,138 @@ hist(eVec_nw)
 ```
 
 
-## Método simple
+## Método naive
 
 ```{r}
-plot(X,Y)
-Xnew <- -1.5
-abline(fitlm)
-abline(v=Xnew, lty="dashed")
+Xnew <- seq(-4,4,0.25)
 
-
-muHat <- predict(
+# Estimacion paramétrica
+muHat_lm <- predict(
   fitlm, 
   newdata=data.frame(X=Xnew)
 )
 
-points(
-  Xnew, 
-  muHat, 
-  pch=19, 
-  col="red"
+
+# Intervalos al 5% de confianza para lm
+C.X_lm_lwr <- c(
+  muHat_lm - quantile(eVec_lm, .975)
+)
+
+C.X_lm_uppr <- c(
+  muHat_lm + quantile(eVec_lm, .975)
 )
 
 
-C.X <- c(
-  muHat - quantile(eVec, .975), 
-  muHat + quantile(eVec, .975)
+
+# Estimacion no paramétrica
+muHat_nw <-  ksmooth(
+  X, 
+  Y, 
+  kernel = "normal",
+  bandwidth = 0.2,
+  x.points = Xnew 
 )
 
-points(
-  rep(Xnew, 2), 
-  C.X, 
-  type="l", 
-  col="red", 
-  lwd=2
+# Intervalos al 5% de confianza para nw
+C.X_nw_lwr <- c(
+  muHat_nw$y - quantile(eVec_nw, .975)
 )
 
-nEval <- 200
+C.X_nw_uppr <- c(
+  muHat_nw$y + quantile(eVec_nw, .975)
+)
+
+
+
+resultados_conf_naive <- data.frame(
+  Xnew,
+  muHat_lm,
+  muHat_nw$y,
+  C.X_lm_lwr,
+  C.X_lm_uppr,
+  C.X_nw_lwr,
+  C.X_nw_uppr
+)
+
+```
+
+
+Luego, gráficamos ambas estimaciones con sus respectivos intervalos [@fig-plot_naive]. Se puede apreciar como los intervalos dependen de la calidad del estimador, en este caso la estimación no paramétrica no fue optimizada y como resultado el intervalo es mucho más amplio que el de la regresión lineal.
+
+```{r}
+#| label: fig-plot_naive
+#| fig-cap: "Gráfico de dispersión de datos de prueba, con estimaciones e intervalos mediante modelo lineal MCO (rojo) y Naradaya-Watson (azul)." 
+
+par(mfrow = c(1,1))
+
+plot(
+  X,
+  Y
+)
+
+
+# Plots Modelo lineal
+lines(
+  resultados_conf_naive$Xnew,
+  resultados_conf_naive$muHat_lm,
+  col = "red",
+  cex = 1.5
+)
+
+lines(
+  resultados_conf_naive$Xnew,
+  resultados_conf_naive$C.X_lm_lwr,
+  col = "red",
+  cex = 1.5,
+  lty = "dashed"
+)
+
+lines(
+  resultados_conf_naive$Xnew,
+  resultados_conf_naive$C.X_lm_uppr,
+  col = "red",
+  cex = 1.5,
+  lty = "dashed"
+)
+
+# Plots Naradaya-Watson
+lines(
+  resultados_conf_naive$Xnew,
+  resultados_conf_naive$muHat_nw,
+  col = "blue",
+  cex = 1.5
+)
+
+lines(
+  resultados_conf_naive$Xnew,
+  resultados_conf_naive$C.X_nw_lwr,
+  col = "blue",
+  cex = 1.5,
+  lty = "dashed"
+)
+
+lines(
+  Xnew,
+  C.X_nw_uppr,
+  col = "blue",
+  cex = 1.5,
+  lty = "dashed"
+)
+
+```
+
+
+
+## Método conformal simple
+
+```{r}
+
+#nEval <- 200
+
 yCand <- seq(
-  from=min(Y), 
-  to=max(Y), 
-  length=nEval
+  from = min(Y)-1, 
+  to = max(Y)+1, 
+  by = 0.1
   )
 
 confPredict <- function(y, Xin){
@@ -419,47 +521,172 @@ confPredict <- function(y, Xin){
   return(testResult)
 }
 
-Cxa <- range(
-  yCand[sapply(yCand, confPredict, Xin=Xnew)]
-)
 
-plot(X,Y)
-abline(fitlm)
-abline(v=Xnew, lty="dashed")
-points(rep((Xnew+.05), 2), C.X, type="l", col="red", lwd=2)
-points(rep(Xnew, 2), Cxa, type="l", col="blue", lwd=3)
+
+Cxa <- matrix(
+  0, 
+  nrow = length(Xnew), 
+  ncol=2
+  )
+
+for(i in 1:length(Xnew)){
+  Cxa[i,] <- range(
+    yCand[sapply(yCand, confPredict, Xin=Xnew[i])]
+  )
+}
+
+
+
+resultados_conf_simple <- data.frame(
+  Xnew,
+  muHat_lm, # La estimacion puntual es la misma
+  Cxa_lm_lwr = Cxa[,1],
+  Cxa_lm_uppr = Cxa[,2],
+  C.X_lm_lwr,
+  C.X_lm_uppr
+)
 
 ```
 
+En la @fig-plot_simple se presenta tanto los intervalos con el método conformal simple como con el naive. Se puede notar que los primeros resultan un tanto más angostos que los segundos. La rugosidad se debe a que estamos trabajando en una grilla y no el recorrido continuo.
 
+```{r}
+#| label: fig-plot_simple
+#| fig-cap: "Gráfico de dispersión de datos de prueba, con estimaciones mediante regresión lineal e intervalos conformales simples (rojo) y naive (azul)." 
+
+plot(
+  X,
+  Y
+)
+
+# Plots Modelo lineal
+lines(
+  resultados_conf_simple$Xnew,
+  resultados_conf_simple$muHat_lm,
+  col = "red",
+  cex = 1.5
+)
+
+lines(
+  resultados_conf_simple$Xnew,
+  resultados_conf_simple$Cxa_lm_lwr,
+  col = "red",
+  cex = 1.5,
+  lty = "dashed"
+)
+
+lines(
+  resultados_conf_simple$Xnew,
+  resultados_conf_simple$Cxa_lm_uppr,
+  col = "red",
+  cex = 1.5,
+  lty = "dashed"
+)
+
+
+lines(
+  resultados_conf_simple$Xnew,
+  resultados_conf_simple$C.X_lm_lwr,
+  col = "blue",
+  cex = 1.5,
+  lty = "dashed"
+)
+
+lines(
+  resultados_conf_simple$Xnew,
+  resultados_conf_simple$C.X_lm_uppr,
+  col = "blue",
+  cex = 1.5,
+  lty = "dashed"
+)
+```
 
 
 ## Split
 
+El método de intervalos conformales con separaciones de la muestra (_splits_) es más eficiente computacionalmente. 
+
 ```{r}
+
 splitConfPredict <- function(Xin){
   nData <- nrow(regData)
   regData$index <- 1:nData
   regData$split <- 1
   regData$split[sample(regData$index, floor(nrow(regData)/2), replace=F)] <- 2
   fitlm.spl <- lm(Y~X, data=subset(regData, split==1))
-  resOut <- abs(subset(regData, split==2)$Y - predict(fitlm.spl,
-                                         newdata=subset(regData, split==2)))
+  resOut <- abs(subset(regData, split==2)$Y - predict(fitlm.spl, newdata=subset(regData, split==2)))
   kOut <- ceiling(((nData/2)+1)*(.975))
   resUse <- resOut[order(resOut)][kOut]
+  
   Y.hat <- predict(fitlm.spl, newdata=data.frame(X=Xin))
-  C.split <- c(Y.hat-resUse,Y.hat+resUse)
+  C.split <- c(Y.hat-resUse, Y.hat, Y.hat+resUse)
   return(C.split)
 }
 
-plot(X,Y)
-abline(fitlm)
-abline(v=Xnew, lty="dashed")
-points(rep((Xnew+.05), 2), C.X, type="l", col="red", lwd=2)
-points(rep(Xnew, 2), Cxa, type="l", col="blue", lwd=3)
-points(rep(Xnew-.05, 2), splitConfPredict(Xnew), type="l", col="green", lwd=3)
+Csplit <- t(sapply(Xnew, FUN = splitConfPredict))
+
+resultados_conf_split <- data.frame(
+  Xnew,
+  muHat_lm = muHat_lm, # La estimacion puntual es la misma
+  Csplit_lwr = Csplit[,1],
+  Csplit_uppr = Csplit[,3],
+  Cxa_lm_lwr = Cxa[,1],
+  Cxa_lm_uppr = Cxa[,2]
+)
 ```
 
+En la @fig-plot_split se puede observar los intervalos con el método con _split_. Estos intervalos parecen ser un tanto más amplios que los calculados mediante el método simple. 
+
+```{r}
+#| label: fig-plot_split
+#| fig-cap: "Gráfico de dispersión de datos de prueba, con estimaciones mediante regresión lineal e intervalos conformales split (rojo) y simples (azul)." 
+
+plot(
+  X,
+  Y
+)
+
+# Plots Modelo lineal
+lines(
+  resultados_conf_split$Xnew,
+  resultados_conf_split$muHat_lm,
+  col = "red",
+  cex = 1.5
+)
+
+lines(
+  resultados_conf_split$Xnew,
+  resultados_conf_split$Csplit_lwr,
+  col = "red",
+  cex = 1.5,
+  lty = "dashed"
+)
+
+lines(
+  resultados_conf_split$Xnew,
+  resultados_conf_split$Csplit_uppr,
+  col = "red",
+  cex = 1.5,
+  lty = "dashed"
+)
+
+
+lines(
+  resultados_conf_split$Xnew,
+  resultados_conf_split$Cxa_lm_lwr,
+  col = "blue",
+  cex = 1.5,
+  lty = "dashed"
+)
+
+lines(
+  resultados_conf_split$Xnew,
+  resultados_conf_split$Cxa_lm_uppr,
+  col = "blue",
+  cex = 1.5,
+  lty = "dashed"
+)
+```
 
 \newpage
 
@@ -673,95 +900,6 @@ Podemos ver que el método de splitting es más amplio, pero solo en poco más d
 
 \newpage
 
-
-<!-- OMITIRIA LA REGRESION MULTIPLE -->
-
-<!-- ### Ejemplo regresión múltiple
-
-Tomando como ejemplo el dataset `state.x77` de R, vamos a intentar predecir la variable `life_exp` utilizando como variables explicativas `income`, `hs_grad`, `frost` y `area`.
-
-Vamos a entrenar el modelo con todas las observaciones, a excepción de una, que será la que queremos predecir, en concreto, la ciudad de Colorado.
-
-
-```{r,error = TRUE}
-
-
-# Semilla
-
-set.seed(1234)
-
-# Para arreglar los nombres
-
-normalize_names <- function(names) {
-  upper = tolower(names)
-  newNames = gsub(" ", "_", upper)
-  return(newNames)
-}
-
-df <- as.data.frame(state.x77)
-
-names(df) <- normalize_names(names(df))
-
-# Para elegir la observación a predecir
-
-test <- runif(1,1,nrow(df))
-
-# Vector de variables independientes
-
-
-Y = df[-test,c('life_exp')]
-
-
-# Matriz de diseño
-
-X = df[-test,c('income','hs_grad','frost','area')]
-
-row.names(X) <- NULL
-X = data.matrix(X, rownames.force = TRUE)
-
-
-# Matriz de diseño en los nuevos puntos
-
-x0 = data.matrix(
-  df[test,c('income','hs_grad','frost','area')],
-  rownames.force = TRUE
-)
-
-# No funciona con lm.funs, NW usamos RF!
-
-engine_rf = rf.funs(
-  ntree = 500,
-  varfrac = 0.333
-)
-
-train.fun = engine_rf$train.fun
-predict.fun = engine_rf$predict.fun
-
-res <- conformal.pred(
-  x = X,
-  y = Y,
-  x0 = x0,
-  train.fun = train.fun,
-  predict.fun = predict.fun
-)
-
-
-intervalo(
-  res$pred,
-  res$lo,
-  res$up
-)
-
-glue::glue(
-  "La expecativa de vida de la {ciudad} es {df[test,'life_exp']}",
-  ciudad = row.names(df[test,])
-)
-
-
-```
-
-
-Para la realización de este ejemplo, se intentó realizar la predicción con el modelo de regresión lineal tanto en su versión paramétrica como su versión de núcleo,el resultado esta repleto de valores NA, por lo que se optó por probar diferentes modelos de regresión no paramétrica, en concreto, Random Forest, el cual nos dio un resultado satisfactorio. -->
 
 # Conclusión
 
