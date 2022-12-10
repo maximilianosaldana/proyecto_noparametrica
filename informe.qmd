@@ -472,7 +472,29 @@ points(rep(Xnew-.05, 2), splitConfPredict(Xnew), type="l", col="green", lwd=3)
 
 \newpage
 
-## Paquete conformalInference
+
+# Conclusión
+
+Si bien en la práctica, los intervalos de predicción pueden llegar a ser confusos para personas no técnicas sobre estadística es importante destacar su utilidad en la toma de decisiones, cualquier metodología que aborde sobre la mejora de estos, es de gran relevancia como la metodología expuesta en este articulo.
+
+Con este articulo hemos revisado como implementar intervalos de predicción conformales para cualquier modelo de regresión, estos alogritmos requieren únicamente asumir que los datos tienen independencia entre sí, pero ninguna forma funcional sobre los regresores, matriz de diseño o distribución de probabilidad para los residuos. Esto último puede llegar a ser una gran ventaja para modelos en donde no es tan claro la construcción de intervalos de predicción que usualmente son aproximados con boostrap, como pueden ser los métodos de ensamble o en aquellos modelos donde se hacen supuestos fuertes sobre la distribución de los datos basados en resultados asintóticos.
+
+El considerar este tipo de metodologías nos permite reducir la incertidumbre respecto a un intervalo de predicción clásico como pudimos ver en el @sec-teorema1. Es importante mencionar que se cuenta con una implementación por parte de los autores en la librería **conformalInferece** (ver @sec-conformalInferece) de R con modelos de regresión ampliamente utilizados en la práctica, como son modelos de regresión lineal, splines, glm, random forest, etc.
+
+Cabe destacar que la inferencia comformal es aplicada frecuentemente en la actualidad a modelos de machine learning. Estas metdologías pueden complementar los métodos basados únicamente en boostrap para estimación de varianzas en para cualquier algortimo de regresión, demostrando que en base al estimador consistente, se puede obtener un intervalo de predicción cosistente en la estimación de la cobertura condicional 
+
+
+
+
+# Bibliografía
+
+
+::: {#refs}
+:::
+
+# Anexo {.appendix}
+
+# Paquete conformalInference {.appendix} {#sec-conformalInferece}
 
 
 Existe un paquete disponible en CRAN, que ya tiene implementado todas estas herramientas.
@@ -561,7 +583,7 @@ predict.fun = function(out,newx) {
 
 \newpage
 
-### Ejemplo para implementar Nadaraya–Watson
+## Ejemplo para implementar Nadaraya–Watson
 
 ```{r}
 train.fun_ks <- function(x,y,out=NULL) {
@@ -601,7 +623,7 @@ predict.fun_ks <- function(out, newx) {
 
 Si bien en el paquete tiene implementado diferentes modelos, como es el ejemplo de la regresión lineal no paramétrica de Nadaraya–Watson, su resultado final no tiene asociado el método `predict` y devuelve una lista. Haciendo las modificaciones correspondientes, es posible utilizarlo en la función `conformal.pred`.
 
-#### Ejemplo de predicción conformal para Nadaraya–Watson
+### Ejemplo de predicción conformal para Nadaraya–Watson
 
 Hagamos una prueba, intentado predecir el valor de Y para $X = -1.5$, como en el ejemplo anterior:
 
@@ -686,7 +708,7 @@ Podemos ver que el método de splitting es más amplio, pero solo en poco más d
 
 \newpage
 
-### Ejemplo regresión múltiple
+## Ejemplo regresión múltiple
 
 Tomando como ejemplo el dataset `state.x77` de R, vamos a intentar predecir la variable `life_exp` utilizando como variables explicativas `income`, `hs_grad`, `frost` y `area`.
 
@@ -772,27 +794,4 @@ glue::glue(
 
 
 Para la realización de este ejemplo, se intentó realizar la predicción con el modelo de regresión lineal tanto en su versión paramétrica como su versión de núcleo,el resultado esta repleto de valores NA, por lo que se optó por probar diferentes modelos de regresión no paramétrica, en concreto, Random Forest, el cual nos dio un resultado satisfactorio.
-
-# Conclusión
-
-Si bien en la práctica, los intervalos de predicción pueden llegar a ser confusos para personas no técnicas sobre estadística es importante destacar su utilidad en la toma de decisiones, cualquier metodología que aborde sobre la mejora de estos, es de gran relevancia como la metodología expuesta en este articulo.
-
-Con este articulo hemos revisado como implementar intervalos de predicción conformales para cualquier modelo de regresión, estos alogritmos requieren únicamente asumir que los datos tienen independencia entre sí, pero ninguna forma funcional sobre los regresores, matriz de diseño o distribución de probabilidad para los residuos. Esto último puede llegar a ser una gran ventaja para modelos en donde no es tan claro la construcción de intervalos de predicción que usualmente son aproximados con boostrap, como pueden ser los métodos de ensamble o en aquellos modelos donde se hacen supuestos fuertes sobre la distribución de los datos basados en resultados asintóticos.
-
-El considerar este tipo de metodologías nos permite reducir la incertidumbre respecto a un intervalo de predicción clásico como pudimos ver en el @sec-teorema1. Es importante mencionar que se cuenta con una implementación por parte de los autores en la librería **conformalInferece** de R con modelos de regresión ampliamente utilizados en la práctica, como son modelos de regresión lineal, splines, glm, random forest, etc.
-
-Cabe destacar que la inferencia comformal es aplicada frecuentemente en la actualidad a modelos de machine learning. Estas metdologías pueden complementar los métodos basados únicamente en boostrap para estimación de varianzas en para cualquier algortimo de regresión, demostrando que en base al estimador consistente, se puede obtener un intervalo de predicción cosistente en la estimación de la cobertura condicional 
-
-
-
-
-# Bibliografía
-
-# TODO AGREGAR BIBLIOGRAFIA y PAQUETES DE R
-
-::: {#refs}
-:::
-
-# Anexo {.appendix}
-
 
