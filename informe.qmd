@@ -67,7 +67,7 @@ $$
 \end{cases}
 $${#eq-Ucases}
 
-Aquí $U_{(1)} \le \dots \le U_{(n)}$ son los estadísticos de orden de la muestra. Se verifica la cobertura en muestra finita de la @eq-Uresprevio: dada la independencia de las variables, el rango de $U_{n+1}$ en la muestra se distribuye uniforme en el conjunto $\{1, \dots, n+1\}$, entonces 
+Aquí $U_{(1)} \le \dots \le U_{(n)}$ son los estadísticos de orden de la muestra. Se verifica la cobertura en muestra finita de la @eq-Uresprevio: dada la independencia de las variables, el rango de $U_{n+1}$ en la muestra se distribuye uniforme en el conjunto $\{1, \dots, n+1\}$, entonces en nuestro problema de regresión observamos una muestra $Z_{i} = (X_{i},Y_{i}) ~ \in \mathbb{R}^{d} \times \mathbb{R} \sim P$ 
 
 ## Método _naive_ de construcción de intervalos {#sec-naive}
 
@@ -97,7 +97,7 @@ $$
 \pi(y) = \frac{1}{n+1}\sum_{i=1}^{n+1}\mathbb{I}\{R_{y,i} \le R_{y,n+1}\} = \frac{1}{n+1} + \frac{1}{n+1}\sum_{i=1}^{n}\mathbb{I}\{R_{y,i} \le R_{y,n+1}\}
 $${#eq-piy}
 
-que es la proporción de los puntos de la muestra aumentada cuyos residuos dentro de la muestra son más pequeños que el residuo $R_{y,n+1}$. Como los datos son i.i.d. y suponiendo la simetría de $\hat{\mu}$, se puede apreciar que el estadístico $\pi(Y_{n+1})$ se distribuye uniforme en ${1/(n+1), 2/(n+1),\dots,1}$, lo cual implica^[Ver por qué]:
+que es la proporción de los puntos de la muestra aumentada cuyos residuos dentro de la muestra son más pequeños que el residuo $R_{y,n+1}$. Como los datos son i.i.d. y suponiendo la simetría de $\hat{\mu}$, se puede apreciar que el estadístico $\pi(Y_{n+1})$ se distribuye uniforme en ${1/(n+1), 2/(n+1),\dots,1}$, lo cual implica:
 
 $$
 P((n+1)\pi(Y_{n+1})\le \lceil (1-\alpha)(n+1)\rceil) \ge 1-\alpha
@@ -327,6 +327,7 @@ Por construcción, los datos tienen una relación lineal, lo cual se puede ver v
 
 ```{r}
 #| label: fig-datos_demo
+#| echo: FALSE
 #| fig-cap: "Gráfico de dispersión de los datos de ejemplo."
 
 plot(X, Y)
@@ -357,6 +358,7 @@ Los histogramas de los residuos en valor absoluto para ambas estimaciones se pue
 
 ```{r}
 #| label: fig-hist_e
+#| echo: FALSE
 #| fig-cap: "Histogramas de los residuos en valores absolutos"
 par(mfrow = c(1,2))
 hist(eVec_lm)
@@ -375,7 +377,6 @@ muHat_lm <- predict(
   newdata=data.frame(X=Xnew)
 )
 
-
 # Intervalos al 5% de confianza para lm
 C.X_lm_lwr <- c(
   muHat_lm - quantile(eVec_lm, .975)
@@ -384,8 +385,6 @@ C.X_lm_lwr <- c(
 C.X_lm_uppr <- c(
   muHat_lm + quantile(eVec_lm, .975)
 )
-
-
 
 # Estimacion no paramétrica
 muHat_nw <-  ksmooth(
@@ -405,8 +404,6 @@ C.X_nw_uppr <- c(
   muHat_nw$y + quantile(eVec_nw, .975)
 )
 
-
-
 resultados_conf_naive <- data.frame(
   Xnew,
   muHat_lm,
@@ -424,6 +421,7 @@ Luego, gráficamos ambas estimaciones con sus respectivos intervalos [@fig-plot_
 
 ```{r}
 #| label: fig-plot_naive
+#| echo: FALSE
 #| fig-cap: "Gráfico de dispersión de datos de prueba, con estimaciones e intervalos mediante modelo lineal MCO (rojo) y Naradaya-Watson (azul)." 
 
 par(mfrow = c(1,1))
@@ -496,7 +494,7 @@ yCand <- seq(
   from = min(Y)-1, 
   to = max(Y)+1, 
   by = 0.1
-  )
+)
 
 confPredict <- function(y, Xin){
   
@@ -552,6 +550,7 @@ En la @fig-plot_simple se presenta tanto los intervalos con el método conformal
 
 ```{r}
 #| label: fig-plot_simple
+#| echo: FALSE
 #| fig-cap: "Gráfico de dispersión de datos de prueba, con estimaciones mediante regresión lineal e intervalos conformales simples (rojo) y naive (azul)." 
 
 plot(
@@ -614,7 +613,10 @@ splitConfPredict <- function(Xin){
   regData$split <- 1
   regData$split[sample(regData$index, floor(nrow(regData)/2), replace=F)] <- 2
   fitlm.spl <- lm(Y~X, data=subset(regData, split==1))
-  resOut <- abs(subset(regData, split==2)$Y - predict(fitlm.spl, newdata=subset(regData, split==2)))
+  resOut <- abs(
+    subset(regData, split==2)$Y -
+     predict(fitlm.spl, newdata=subset(regData, split==2))
+  )
   kOut <- ceiling(((nData/2)+1)*(.975))
   resUse <- resOut[order(resOut)][kOut]
   
@@ -639,6 +641,7 @@ En la @fig-plot_split se puede observar los intervalos con el método con _split
 
 ```{r}
 #| label: fig-plot_split
+#| echo: FALSE
 #| fig-cap: "Gráfico de dispersión de datos de prueba, con estimaciones mediante regresión lineal e intervalos conformales split (rojo) y simples (azul)." 
 
 plot(
@@ -690,7 +693,29 @@ lines(
 
 \newpage
 
-## Paquete conformalInference
+
+# Conclusión
+
+Si bien en la práctica los intervalos de predicción pueden llegar a ser confusos para personas sin conocimiento de estadística, es importante destacar su utilidad en la toma de decisiones, cualquier metodología que aborde sobre la mejora de estos es de gran relevancia; como la metodología expuesta en este articulo.
+
+Con este articulo se ha revisado cómo implementar intervalos de predicción conformales para cualquier modelo de regresión. Estos alogritmos requieren únicamente asumir que los datos tienen independencia entre sí, pero ninguna forma funcional sobre los regresores, matriz de diseño o distribución de probabilidad para los residuos. Esto último puede llegar a ser una gran ventaja para modelos en donde no es tan claro la construcción de intervalos de predicción, que usualmente son aproximados con boostrap, como pueden ser los métodos de ensamble o en aquellos modelos donde se hacen supuestos fuertes sobre la distribución de los datos basados en resultados asintóticos.
+
+El considerar este tipo de metodologías nos permite reducir la incertidumbre respecto a un intervalo de predicción clásico como pudimos ver en el @sec-teorema1. Es importante mencionar que se cuenta con una implementación por parte de los autores de @lei2017 en la librería **conformalInferece** (ver @sec-conformalInferece) de R con modelos de regresión ampliamente utilizados en la práctica, como son los modelos de regresión lineal, splines, glm, random forest, etc.
+
+Cabe destacar que la inferencia conformal es aplicada frecuentemente en la actualidad a modelos de machine learning. Estas metdologías pueden complementar los métodos basados únicamente en boostrap para estimación de varianzas para cualquier algortimo de regresión,ya que al agregar el supuesto de que el estimador es consistente se puede obtener un intervalo de predicción consistente, con cobertura condicional apropiada.
+
+
+
+
+# Bibliografía
+
+
+::: {#refs}
+:::
+
+# Anexo {.appendix}
+
+# Paquete conformalInference {#sec-conformalInferece}
 
 El paquete de _R_ _conformalInference_ [@tibshirani2019] ya tiene implementadas todas estas herramientas de inferencia conformal.
 
@@ -775,7 +800,7 @@ predict.fun = function(out,newx) {
 
 \newpage
 
-### Ejemplo para implementar Nadaraya–Watson
+## Ejemplo para implementar Nadaraya–Watson
 
 ```{r}
 train.fun_ks <- function(x,y,out=NULL) {
@@ -815,7 +840,7 @@ predict.fun_ks <- function(out, newx) {
 
 Si bien en el paquete tiene implementado diferentes modelos, como es el ejemplo de la regresión lineal no paramétrica de Nadaraya–Watson, su resultado final no tiene asociado el método `predict` y devuelve una lista. Haciendo las modificaciones correspondientes, es posible utilizarlo en la función `conformal.pred`.
 
-#### Ejemplo de predicción conformal para Nadaraya–Watson
+### Ejemplo de predicción conformal para Nadaraya–Watson
 
 Hagamos una prueba, intentado predecir el valor de Y para $X = -1.5$, como en el ejemplo anterior:
 
@@ -900,25 +925,90 @@ Podemos ver que el método de splitting es más amplio, pero solo en poco más d
 
 \newpage
 
+## Ejemplo regresión múltiple
 
-# Conclusión
+Tomando como ejemplo el dataset `state.x77` de R, vamos a intentar predecir la variable `life_exp` utilizando como variables explicativas `income`, `hs_grad`, `frost` y `area`.
 
-Si bien en la práctica, los intervalos de predicción pueden llegar a ser confusos para personas no técnicas sobre estadística es importante destacar su utilidad en la toma de decisiones, cualquier metodología que aborde sobre la mejora de estos, es de gran relevancia como la metodología expuesta en este articulo.
-
-Con este articulo hemos revisado como implementar intervalos de predicción conformales para cualquier modelo de regresión, estos alogritmos requieren únicamente asumir que los datos tienen independencia entre sí, pero ninguna forma funcional sobre los regresores, matriz de diseño o distribución de probabilidad para los residuos. Esto último puede llegar a ser una gran ventaja para modelos en donde no es tan claro la construcción de intervalos de predicción que usualmente son aproximados con boostrap, como pueden ser los métodos de ensamble o en aquellos modelos donde se hacen supuestos fuertes sobre la distribución de los datos basados en resultados asintóticos.
-
-El considerar este tipo de metodologías nos permite reducir la incertidumbre respecto a un intervalo de predicción clásico como pudimos ver en el @sec-teorema1. Es importante mencionar que se cuenta con una implementación por parte de los autores en la librería **conformalInferece** de R con modelos de regresión ampliamente utilizados en la práctica, como son modelos de regresión lineal, splines, glm, random forest, etc.
-
-Cabe destacar que la inferencia comformal es aplicada frecuentemente en la actualidad a modelos de machine learning. Estas metdologías pueden complementar los métodos basados únicamente en boostrap para estimación de varianzas en para cualquier algortimo de regresión, demostrando que en base al estimador consistente, se puede obtener un intervalo de predicción cosistente en la estimación de la cobertura condicional 
+Vamos a entrenar el modelo con todas las observaciones, a excepción de una, que será la que queremos predecir, en concreto, la ciudad de Colorado.
 
 
+```{r,error = TRUE}
 
 
-# Bibliografía
+# Semilla
 
-::: {#refs}
-:::
+set.seed(1234)
 
-# Anexo {.appendix}
+# Para arreglar los nombres
 
+normalize_names <- function(names) {
+  upper = tolower(names)
+  newNames = gsub(" ", "_", upper)
+  return(newNames)
+}
+
+df <- as.data.frame(state.x77)
+
+names(df) <- normalize_names(names(df))
+
+# Para elegir la observación a predecir
+
+test <- runif(1,1,nrow(df))
+
+# Vector de variables independientes
+
+
+Y = df[-test,c('life_exp')]
+
+
+# Matriz de diseño
+
+X = df[-test,c('income','hs_grad','frost','area')]
+
+row.names(X) <- NULL
+X = data.matrix(X, rownames.force = TRUE)
+
+
+# Matriz de diseño en los nuevos puntos
+
+x0 = data.matrix(
+  df[test,c('income','hs_grad','frost','area')],
+  rownames.force = TRUE
+)
+
+# No funciona con lm.funs, NW usamos RF!
+
+engine_rf = rf.funs(
+  ntree = 500,
+  varfrac = 0.333
+)
+
+train.fun = engine_rf$train.fun
+predict.fun = engine_rf$predict.fun
+
+res <- conformal.pred(
+  x = X,
+  y = Y,
+  x0 = x0,
+  train.fun = train.fun,
+  predict.fun = predict.fun
+)
+
+
+intervalo(
+  res$pred,
+  res$lo,
+  res$up
+)
+
+glue::glue(
+  "La expecativa de vida de la {ciudad} es {df[test,'life_exp']}",
+  ciudad = row.names(df[test,])
+)
+
+
+```
+
+
+Para la realización de este ejemplo, se intentó realizar la predicción con el modelo de regresión lineal tanto en su versión paramétrica como su versión de núcleo,el resultado esta repleto de valores NA, por lo que se optó por probar diferentes modelos de regresión no paramétrica, en concreto, Random Forest, el cual nos dio un resultado satisfactorio.
 
