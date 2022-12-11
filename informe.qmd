@@ -67,7 +67,7 @@ $$
 \end{cases}
 $${#eq-Ucases}
 
-Aquí $U_{(1)} \le \dots \le U_{(n)}$ son los estadísticos de orden de la muestra. Se verifica la cobertura en muestra finita de la @eq-Uresprevio: dada la independencia de las variables, el rango de $U_{n+1}$ en la muestra se distribuye uniforme en el conjunto $\{1, \dots, n+1\}$, entonces en nuestro problema de regresión observamos una muestra $Z_{i} = (X_{i},Y_{i}) ~ \in \mathbb{R}^{d} \times \mathbb{R} \sim P$ 
+Aquí $U_{(1)} \le \dots \le U_{(n)}$ son los estadísticos de orden de la muestra. Se verifica la cobertura en muestra finita de la @eq-Uresprevio: dada la independencia de las variables, el rango de $U_{n+1}$ en la muestra se distribuye uniforme en el conjunto $\{1, \dots, n+1\}$, entonces en nuestro problema de regresión observamos una muestra $Z_{i} = (X_{i},Y_{i}) ~ \in \mathbb{R}^{d} \times \mathbb{R} \sim P$ para la construcción de un intervalo de predicción para $Y_{n+1}$ dado las nuevas covariables $X_{n+1}$, que sigue la ley de probabilidad $P$, podemos construir un intervalo de predicción siguiendo la metdología mencioanda a continuación.
 
 ## Método _naive_ de construcción de intervalos {#sec-naive}
 
@@ -546,7 +546,7 @@ resultados_conf_simple <- data.frame(
 
 ```
 
-En la @fig-plot_simple se presenta tanto los intervalos con el método conformal simple como con el naive. Se puede notar que los primeros resultan un tanto más angostos que los segundos. La rugosidad se debe a que estamos trabajando en una grilla y no el recorrido continuo.
+En la @fig-plot_simple se presenta tanto los intervalos con el método conformal simple como con el naive. Se puede notar que los intervalos son casi idénticos. La rugosidad se debe a que estamos trabajando en una grilla y no el recorrido continuo.
 
 ```{r}
 #| label: fig-plot_simple
@@ -700,7 +700,7 @@ Si bien en la práctica los intervalos de predicción pueden llegar a ser confus
 
 Con este articulo se ha revisado cómo implementar intervalos de predicción conformales para cualquier modelo de regresión. Estos alogritmos requieren únicamente asumir que los datos tienen independencia entre sí, pero ninguna forma funcional sobre los regresores, matriz de diseño o distribución de probabilidad para los residuos. Esto último puede llegar a ser una gran ventaja para modelos en donde no es tan claro la construcción de intervalos de predicción, que usualmente son aproximados con boostrap, como pueden ser los métodos de ensamble o en aquellos modelos donde se hacen supuestos fuertes sobre la distribución de los datos basados en resultados asintóticos.
 
-El considerar este tipo de metodologías nos permite reducir la incertidumbre respecto a un intervalo de predicción clásico como pudimos ver en el @sec-teorema1. Es importante mencionar que se cuenta con una implementación por parte de los autores de @lei2017 en la librería **conformalInferece** (ver @sec-conformalInferece) de R con modelos de regresión ampliamente utilizados en la práctica, como son los modelos de regresión lineal, splines, glm, random forest, etc.
+El considerar este tipo de metodologías nos permite reducir la incertidumbre respecto a un intervalo de predicción clásico como pudimos ver en el @sec-teorema1. Es importante mencionar que se cuenta con una implementación por parte de los autores de @lei2017 en la librería **conformalInferece** [@tibshirani2019] -ver @sec-conformalInferece - de R con modelos de regresión ampliamente utilizados en la práctica, como son los modelos de regresión lineal, splines, glm, random forest, etc.
 
 Cabe destacar que la inferencia conformal es aplicada frecuentemente en la actualidad a modelos de machine learning. Estas metdologías pueden complementar los métodos basados únicamente en boostrap para estimación de varianzas para cualquier algortimo de regresión,ya que al agregar el supuesto de que el estimador es consistente se puede obtener un intervalo de predicción consistente, con cobertura condicional apropiada.
 
@@ -713,9 +713,11 @@ Cabe destacar que la inferencia conformal es aplicada frecuentemente en la actua
 ::: {#refs}
 :::
 
+\appendix
+
 # Anexo {.appendix}
 
-# Paquete conformalInference {#sec-conformalInferece}
+## Paquete conformalInference {#sec-conformalInferece}
 
 El paquete de _R_ _conformalInference_ [@tibshirani2019] ya tiene implementadas todas estas herramientas de inferencia conformal.
 
@@ -759,7 +761,7 @@ Para cada argumento *.fun están implementados los siguientes modelos por defect
 
 Para el caso de `train.fun` y `predict.fun` se pueden implementar funciones propias, dependiendo del modelo su implementación puede variar.
 
-### Implementación de un modelo de regresión lineal
+## Implementación de un modelo de regresión lineal
 
 ```{r}
 train.fun = function(x,y,out=NULL) {
