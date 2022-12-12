@@ -99,7 +99,7 @@ class: header_background
 
 ## Desventajas
 
-- Estos intervalos pueden presentar una considerable subcobertura, dado que pueen presentar una considerable subcobertura, ya que esta utilizando
+- Estos intervalos pueden presentar una considerable subcobertura, ya que esta utilizando
 los residuos de la muestra.
 
 --
@@ -140,7 +140,7 @@ class: header_background
 
 # Intervalos de predicción conformales
 
-Si consideramos la prueba `\(H_{0}: Y_{n+1} = y\)` e invertimos la prueba para obtener la región de acepatación o intervalo de **predicción**
+Si consideramos la prueba `\(H_{0}: Y_{n+1} = y\)` e invertimos la prueba para obtener la región de aceptación o intervalo de **predicción**
 
 `$$\begin{equation}C_{conf}(X_{n+1}) = \left[y \in \mathbb{R}: (n+1)\pi(Y_{n+1})\le \lceil (1-\alpha)(n+1) \rceil \right] \end{equation}$$`
 
@@ -168,7 +168,7 @@ class: header_background
 
 .center[
 
-![](alg1.png)
+![](presentacion/alg1.png)
 
 ]
 
@@ -181,13 +181,13 @@ class: header_background
 
 ### Inversión de una prueba de hipótesis
 
-Por construcción, el intervalo es construido como la inversión de la prueba de hipótesis mencionada anteriormente a un nivel de significancia `\(\alpha\)`, válido para muestras finitas por lo tanto:
+Por construcción, el intervalo es construido como la inversión de la prueba de hipótesis mencionada anteriormente a un nivel de significancia `\(\alpha\)`, además esto es válido para muestras finitas por lo tanto:
 
 `$$\begin{equation}P\left(Y_{n+1} \in C_{conf}(X_{n+1}) \right) \geq 1-\alpha \end{equation}$$`
 
 ### Sobrecobertura
 
-Además, si hacemos el supuesto que los residuos en la muestra tienen una distribución conjunta continua:
+Si hacemos el supuesto que los residuos en la muestra tienen una distribución conjunta continua:
 
 `$$\begin{equation}P(Y_{n+1}\in C_{conf}(X_{n+1})) \le 1-\alpha + \frac{1}{n+1}\end{equation}$$`
 
@@ -195,7 +195,7 @@ Además, si hacemos el supuesto que los residuos en la muestra tienen una distri
 
 ### Observaciones
 
-- Esta cobertura es **marginal** o promedio, no es lo mismo que `\(P(Y_{n+1} \in C_{conf}(x)| X_{n+1}=x) \ge 1-\alpha \,\,\, \forall \,\,\, x \in \mathbb{R}^d\)`
+- Esta cobertura es **marginal** o promedio. No es lo mismo que `\(P(Y_{n+1} \in C_{conf}(x)| X_{n+1}=x) \ge 1-\alpha \,\,\, \forall \,\,\, x \in \mathbb{R}^d\)`
 
 --
 
@@ -251,7 +251,7 @@ Los autores proponen modificar el algoritmo expuesto anteriormente para reducir 
 
 .center[
 
-![](alg2.png)
+![](presentacion/alg2.png)
 
 ]
 
@@ -314,7 +314,7 @@ en muestras finitas e incluso asintóticamente depende fuertemente del estimador
 
 .center[
 
-![](alg3.png)
+![](presentacion/alg3.png)
 
 
 ]
