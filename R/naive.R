@@ -100,7 +100,6 @@ plot(
     Y
 )
 
-
 # Plots Modelo lineal
 lines(
     resultados_conf_naive$Xnew,

@@ -22,7 +22,7 @@ class: center, middle, inverse, title-slide
 # Inferencia Conformal
 ]
 .subtitle[
-## Estadística no parmétrica 2022
+## Estadística no paramétrica 2022
 ]
 .author[
 ### Maximiliano Saldaña y Mauro Loprete
@@ -49,6 +49,21 @@ class: header_background
 
 - ### Intervalos de predicción conformales con muestras separadas (simple y múltiple)
 
+- ### Intervalos de predicción mediante Jackknife
+
+---
+
+class: header_background
+
+# Inferencia predictiva para regresión con distribución libre
+
+## El trabajo fue basado en: 
+
+.center[
+Lei, J., G’Sell, M., Rinaldo, A., Tibshirani, R. J., &amp; Wasserman, L. (2016). Distribution-Free
+Predictive Inference For Regression. arXiv. https://doi.org/10.48550/ARXIV.1604.04173
+]
+
 ---
 
 
@@ -74,7 +89,7 @@ $$
 P\left(Y_{n+1} \in C \left(X\right) \right) \geq 1-\alpha
 $$
 
-Asumiendo que la siguiente observación proviene de la misma distribución `\(F\)`, con la que fue ajustado el modelo.
+Asumiendo que la siguiente observación proviene de la misma distribución `\(F\)` e independientes, con la que fue ajustado el modelo.
 
 ---
 
@@ -107,6 +122,12 @@ los residuos de la muestra.
 ### Solución
 
 **Intervalos de predicción conformales**
+
+---
+
+class: middle, inverse
+
+# Ejemplo en R
 
 ---
 
@@ -290,7 +311,7 @@ class: header_background
 
 Una manera de corregirlo es combinar diferentes inferencias realizadas en `\(N\)` particiones independiente, construtyendo así `\(C_{split,1}\)` y `\(C_{split,2}\)`, hasta obtener `\(C_{split,N}\)`.
 
-Cada una de estas particiones es construidas a un nivel de significación de `\(alpha^{*} = 1 - \alpha/N\)` y se relacionan de la siguiente manera:
+Cada una de estas particiones es construidas a un nivel de significación de `\(\alpha^{*} = 1 - \alpha/N\)` y se relacionan de la siguiente manera:
 
 `$$\begin{equation}C^{N}_{split}(x) = \cap_{j = 1}^{N} C_{split,j}(x) ~~ x \in R^{d}\end{equation}$$`
 
@@ -341,8 +362,7 @@ class: header_background
 
 --
 
-- #### Esta metdología se encuentra implementada en el paquete **conformalInference** de R, con algunos modelos 'base' y su extensión puede ser bastante sencilla mediante wrappers de 
-#### la función de entrenamiento y predicción.
+- #### Esta metodología se encuentra implementada en el paquete **conformalInference** de R, con algunos modelos 'base' y su extensión puede ser bastante sencilla mediante wrappers de la función de entrenamiento y predicción.
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>

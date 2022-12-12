@@ -15,6 +15,9 @@ plot(X, Y)
 # Implementación del algoritmo 2
 
 splitConfPredict <- function(Xin) {
+
+    #TODO : Poner comentarios
+
     nData <- nrow(regData)
     regData$index <- 1:nData
     regData$split <- 1
