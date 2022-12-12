@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Inferencia Conformal</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Maximiliano Saldaña y Mauro Loprete" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link href="libs/tile-view/tile-view.css" rel="stylesheet" />
+    <script src="libs/tile-view/tile-view.js"></script>
+    <link href="libs/panelset/panelset.css" rel="stylesheet" />
+    <script src="libs/panelset/panelset.js"></script>
+    <link href="libs/xaringanExtra-banner/banner.css" rel="stylesheet" />
+    <script src="libs/xaringanExtra-banner/banner.js"></script>
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+    <link rel="stylesheet" href="custom.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Inferencia Conformal
+]
+.subtitle[
+## Estadística no parmétrica 2022
+]
+.author[
+### Maximiliano Saldaña y Mauro Loprete
+]
+.date[
+### 13 de diciembre 2022
+]
+
+---
+
+
+
+
+
+class: header_background
+
+# Guía
+
+- ### Introducción a la inferencia predictiva
+
+- ### Método Naive para la construcción de intervalos de predicción
+
+- ### Intervalos de predicción conformales
+
+- ### Intervalos de predicción conformales con muestras separadas (simple y múltiple)
+
+---
+
+
+class: header_background
+
+# Inferencia predictiva
+
+Consideramos el problema `\(Z_{1},\ldots,Z_{n} \sim F\)` `\(i.i.d\)` donde cada `\(Z_{i} = (X_{i},Y_{i}) \in \mathbb{R}^{d} \times \mathbb{d}\)`, y queremos predecir `\(Y_{n+1}\)`. 
+
+## Algoritmo de regresión
+
+$$
+\mu(x) = \mathbb{E}(Y|X=x) ~ x ~ \in \mathbb{R}^{d}
+$$
+
+
+Es de nuestro interes predecir una nueva observación de nuestra variable de respuesta `\(Y_{n+1}\)` a partir de nuestras covariables `\({X}_{n+1}\)`, sin hacer **ningun** supuesto acerca de
+`\(\mu\)` ni de `\(F\)`. Tomando como referencia un nivel de cobertura `\(\alpha\)` contruiremos un intervalo de predicción conformal para `\(Y_{n+1}\)`.
+
+## Intervalo conformal
+
+$$
+P\left(Y_{n+1} \in C \left(X\right) \right) \geq 1-\alpha
+$$
+
+Asumiendo que la siguiente observación proviene de la misma distribución `\(F\)`, con la que fue ajustado el modelo.
+
+---
+
+
+class: header_background
+
+# Método Naive
+
+
+.center[
+
+`$$\begin{equation}C_{naive}(X_{n+1}) = \left[ \hat{\mu}(X_{n+1}) - \hat{F}^{-1}_n (1-\alpha), \hat{\mu}(X_{n+1}) + \hat{F}^{-1}_n (1-\alpha) \right] \end{equation}$$`
+
+**Donde `\(\hat{F}^{-1}_n\)` es la función inversa de la distribución empírica de los residuos del modelo ajustado.**
+
+]
+
+## Cuando funciona bien
+
+- Este método es aproximadamente válido para muestras grandes, bajo la condición que `\(\hat{\mu}\)` sea lo suficientemente preciso.
+- Bajo condiciones de regularidad tanto para la distribución `\(F\)` y para la función de regresión `\(\hat{\mu}\)`.
+
+## Desventajas
+
+- Estos intervalos pueden presentar una considerable subcobertura, dado que pueen presentar una considerable subcobertura, ya que esta utilizando
+los residuos de la muestra.
+
+--
+
+### Solución
+
+**Intervalos de predicción conformales**
+
+---
+
+class: header_background
+
+# Intervalos de predicción conformales
+
+Para cada `\(y\)` se construye un estimador de regresión aumentado `\(\hat{\mu}_{y}\)`, el cual se estima en el conjunto de datos aumentado `\(Z_{1},\dots,Z_{n},(X_{n+1},y)\)`.
+
+`$$\begin{equation} R_{y,i} = |Y_i - \hat{\mu}_y(X_i)|, \,\,\, i = 1,\dots,n \end{equation}$$`
+
+--
+
+`$$\begin{equation} R_{y,n+1} = |y - \hat{\mu}_y(X_{n+1})| \end{equation}$$`
+
+--
+
+Luego, con el residuo `\(R_{y,n+1}\)` se construye su rango entre los demás residuos de la muestra:
+
+`$$\begin{equation} \pi(y) = \frac{1}{n+1}\sum_{i=1}^{n+1}\mathbb{I}\{R_{y,i} \le R_{y,n+1}\} = \frac{1}{n+1} + \frac{1}{n+1}\sum_{i=1}^{n}\mathbb{I}\{R_{y,i} \le R_{y,n+1}\} \end{equation}$$`
+
+--
+
+Al ser los datos `\(i.i.d\)` se y asumiendo simetría en el estimador de regresión `\(\hat{\mu}\)`, se tiene que:
+
+`$$\begin{equation}P((n+1)\pi(Y_{n+1})\le \lceil (1-\alpha)(n+1)\rceil) \ge 1-\alpha\end{equation}$$`
+
+---
+
+class: header_background
+
+# Intervalos de predicción conformales
+
+Si consideramos la prueba `\(H_{0}: Y_{n+1} = y\)` e invertimos la prueba para obtener la región de acepatación o intervalo de **predicción**
+
+`$$\begin{equation}C_{conf}(X_{n+1}) = \left[y \in \mathbb{R}: (n+1)\pi(Y_{n+1})\le \lceil (1-\alpha)(n+1) \rceil \right] \end{equation}$$`
+
+Notesé que la prube se aplica para cada valor de la grilla de `\(y\)`. Esto implica que para obtener un nuevo intervalo de predicción se tienen que calcular nuevamente:
+
+`$$\begin{equation} R_{y,i} = |Y_i - \hat{\mu}_y(X_i)|, \,\,\, i = 1,\dots,n \end{equation}$$`
+
+--
+
+`$$\begin{equation} R_{y,n+1} = |y - \hat{\mu}_y(X_{n+1})| \end{equation}$$`
+
+--
+
+`$$\begin{equation} \pi(y) = \frac{1}{n+1}\sum_{i=1}^{n+1}\mathbb{I}\{R_{y,i} \le R_{y,n+1}\} = \frac{1}{n+1} + \frac{1}{n+1}\sum_{i=1}^{n}\mathbb{I}\{R_{y,i} \le R_{y,n+1}\} \end{equation}$$`
+
+--
+
+`$$\begin{equation}C_{conf}(X_{n+1}) = \left[y \in \mathbb{R}: (n+1)\pi(Y_{n+1})\le \lceil (1-\alpha)(n+1) \rceil \right] \end{equation}$$`
+
+---
+
+class: header_background
+
+# En forma de algoritmo
+
+.center[
+
+![](alg1.png)
+
+]
+
+---
+
+class: header_background
+
+
+# Respaldo teórico
+
+### Inversión de una prueba de hipótesis
+
+Por construcción, el intervalo es construido como la inversión de la prueba de hipótesis mencionada anteriormente a un nivel de significancia `\(\alpha\)`, válido para muestras finitas por lo tanto:
+
+`$$\begin{equation}P\left(Y_{n+1} \in C_{conf}(X_{n+1}) \right) \geq 1-\alpha \end{equation}$$`
+
+### Sobrecobertura
+
+Además, si hacemos el supuesto que los residuos en la muestra tienen una distribución conjunta continua:
+
+`$$\begin{equation}P(Y_{n+1}\in C_{conf}(X_{n+1})) \le 1-\alpha + \frac{1}{n+1}\end{equation}$$`
+
+--
+
+### Observaciones
+
+- Esta cobertura es **marginal** o promedio, no es lo mismo que `\(P(Y_{n+1} \in C_{conf}(x)| X_{n+1}=x) \ge 1-\alpha \,\,\, \forall \,\,\, x \in \mathbb{R}^d\)`
+
+--
+
+- Si mejora el estimador de `\(\mu\)`, los intervalos se reducen de forma considerable, ya que se utiliza la distribución de los residuos.
+
+---
+
+class: middle, inverse
+
+# Ejemplo en R
+
+---
+
+class: header_background
+
+# Costo computacional
+
+
+.center[
+
+### Como se pudo ver en el algoritmo, el costo computacional es alto, ya que se debe calcular el estimador de regresión para cada valor de la grilla de `\(y\)`, además, 
+
+### al incluir un nuevo valor de `\(X\)` se debe recalcular el estimador de regresión para cada valor de la grilla de `\(y\)`
+
+]
+
+
+--
+
+### Alternativas
+
+--
+
+- Intervalos de predicción conformales en muestras separadas (**Split conformal Prediction Sets**)
+
+--
+
+- Intervalos de predicción conformales en multiples muestras separadas (**Multiple Split conformal Prediction Sets**)
+
+
+---
+
+class: header_background
+
+# Intervalos de predicción conformales en muestras separadas
+
+Los autores proponen modificar el algoritmo expuesto anteriormente para reducir el costo computacional, llegando a una versión:
+
+- Depende solo del paso de estimación. De `\(\mathcal{O}(n^{2})\)` pasamos a `\(\mathcal{O}(n)\)`.
+- Menos requerimientos de memoria, solo hay que almacenar en una partición de la muestra. 
+
+--
+
+.center[
+
+![](alg2.png)
+
+]
+
+---
+
+class: header_background
+
+# Respaldo teórico
+
+
+## Intervalo de predicción
+
+`$$\begin{equation}P(Y_{n+1}\in C_{split}(X_{n+1})) \le 1-\alpha + \frac{2}{n+2}\end{equation}$$`
+
+## Cobertura aproximada
+
+
+`$$\begin{equation}P\left(| \frac{2}{n} \sum_{i \in \mathcal{I}_2} \mathbb{I} \{Y_I \in C_{split}(X_i) - (1-\alpha) \ge \epsilon\} | \right) \le 2 \exp{(-cn^2(\epsilon-4/n)^2)} \end{equation}$$`
+
+
+### Inconvenientes
+
+Al considerar diferentes divisiones de la muestra se introduce una fuente adicional de **aleatoriedad** a la estimación.
+
+---
+class: middle,center
+
+# Ejemplo en R
+
+
+---
+
+class: header_background
+
+# Intervalos de predicción conformales en múltiples muestras separadas
+
+Una manera de corregirlo es combinar diferentes inferencias realizadas en `\(N\)` particiones independiente, construtyendo así `\(C_{split,1}\)` y `\(C_{split,2}\)`, hasta obtener `\(C_{split,N}\)`.
+
+Cada una de estas particiones es construidas a un nivel de significación de `\(alpha^{*} = 1 - \alpha/N\)` y se relacionan de la siguiente manera:
+
+`$$\begin{equation}C^{N}_{split}(x) = \cap_{j = 1}^{N} C_{split,j}(x) ~~ x \in R^{d}\end{equation}$$`
+
+## Inconvenientes
+
+Si realizamos demasiadas particiones, los intervalos se vuelven cada vez mas anchos, debido a que cada intervalo tiene al menos `\(1-\alpha\)` y con el algortimo 2:
+
+`$$\begin{equation} 1 - \frac{\alpha}{N} \leq P(Y_{n+1} \in C_{split}\left(X_{n+1}\right)) \leq 1 - \frac{\alpha}{N} + \frac{2}{n + 2} \leq 1 \end{equation}$$`
+
+Si remplazamos nuestro nivel de signifación `\(\alpha{*} = \alpha/N\)`
+
+---
+
+class: header_background
+
+# Intervalos mediante Jackknife
+
+Este método emplea los cuantiles de los residuos de validación cruzada, dejando una observación afuera para calcular los intervalos de predicción. Tiene como ventaja
+que emplea mas muestra para calcular los resiudos, lo cual se espera que los intervalos tengan una menor amplitud. A consecuencia, no se puede garantizar una cobcertura valida
+en muestras finitas e incluso asintóticamente depende fuertemente del estimador.
+
+.center[
+
+![](alg3.png)
+
+
+]
+
+---
+
+class: header_background
+
+# Conclusiones
+
+- #### Intervalos de predicción, interpretación directa para la toma de decisiones. Mejoras en su construcción son ampliamente valoradas.
+
+--
+
+- #### Dependiendo del método de regresión, para la construcción de intervalos se deben realizar algunos supuestos o utilizar teoría asintótica para su construcción
+
+--
+
+- #### Las conclusiones de los intervalos conformales aceptables son independientes del estimador de regresión que seleccionemos.
+
+--
+
+- #### Estos intervalos son ampliamente utilizados en modelos de machine learning, como pueden ser los métodos de ensamble.
+
+--
+
+- #### Esta metdología se encuentra implementada en el paquete **conformalInference** de R, con algunos modelos 'base' y su extensión puede ser bastante sencilla mediante wrappers de 
+#### la función de entrenamiento y predicción.
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"highlightStyle": "github",
+"slideNumberFormat": "%current%",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+<style>
+    .logo {
+      background-image: url(logo.png);
+      background-size: contain;
+      background-repeat: no-repeat;
+      position: absolute;
+      top: 1em;
+      right: 1em;
+      width: 80px;
+      height: 98px;
+      z-index: 0;
+    }
+    </style>
+    
+    <script>
+    document
+      .querySelectorAll(
+        '.remark-slide-content' +
+        // add additional classes to exclude here, e.g.
+        // ':not(.inverse)' +
+        ':not(.hide-logo)'
+      )
+      .forEach(el => {
+        el.innerHTML += '<div class="logo"></div>';
+      });
+    </script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
