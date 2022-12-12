@@ -352,7 +352,7 @@ $$\begin{equation}P\left(| \frac{2}{n} \sum_{i \in \mathcal{I}_2} \mathbb{I} \{Y
 Al considerar diferentes divisiones de la muestra se introduce una fuente adicional de **aleatoriedad** a la estimación.
 
 ---
-class: middle,center
+class: middle, inverse
 
 # Ejemplo en R
 
